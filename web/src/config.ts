@@ -1,4 +1,4 @@
 export const config = {
-    apiUri: 'https://api.overlab.dev.typingrealm.org',
+    apiUri: 'https://api.overlab.typingrealm.org',
     environment: 'Development'
 };

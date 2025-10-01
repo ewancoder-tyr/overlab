@@ -18,7 +18,12 @@ export class ApiService {
         return this.http.get<Set[]>(`${this.exercisesUri}/${exercise}/sets`);
     }
 
-    completeSet(exercise: string, rep: Rep): Observable<Set> {
-        return this.http.post<Set>(`${this.exercisesUri}/${exercise}/sets`, { reps: rep });
+    completeSet(exercise: string, rep: RepsData): Observable<Set> {
+        console.log('Sending: ' + this.exercisesUri + '/' + exercise + '/sets - ' + rep);
+        return this.http.post<Set>(`${this.exercisesUri}/${exercise}/sets`, rep);
     }
+}
+
+interface RepsData {
+    reps: string;
 }

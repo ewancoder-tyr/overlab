@@ -3,6 +3,7 @@ import {
     ChangeDetectionStrategy,
     Component,
     ElementRef,
+    Input,
     ViewChild
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -17,6 +18,7 @@ import { RecordSetComponent } from '../record-set/record-set.component';
 })
 export class ExerciseTrackerComponent implements AfterViewInit {
     @ViewChild('history') historyElement!: ElementRef<HTMLDivElement>;
+    @Input({ required: true }) exercise!: string;
 
     ngAfterViewInit() {
         this.historyElement.nativeElement.scrollTop =
