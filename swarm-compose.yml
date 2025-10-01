@@ -1,40 +1,55 @@
 networks:
-  internet:
+  internet: # For UDP services to expose ports on Development env.
+    name: tyr-$ENV-overlab-net-internet
   local:
-    name: swarm-${PREFIX}overlab-local-internal
+    name: tyr-$ENV-overlab-net-local
+    internal: true
+  deploy:
+    name: tyr-$ENV-overlab-net-deploy
     attachable: true # So that we can attach to the database for deployment.
-    driver: overlay
     internal: true
   public:
-    name: tyr-proxy-internal
-    driver: overlay
+    name: tyr-$ENV-net-proxy
     external: true
   infra:
-    name: tyr-infrastructure-internal
-    driver: overlay
+    name: tyr-$ENV-net-infrastructure
     external: true
   admin:
-    name: tyr-administration-internal
-    driver: overlay
+    name: tyr-$ENV-net-administration
+    external: true
+
+secrets:
+  tyr-$ENV-sec-postgres-password:
+    external: true
+  tyr-$ENV-sec-dp:
+    external: true
+  tyr-$ENV-sec-env:
+    external: true
+  tyr-$ENV-overlab-sec-env:
     external: true
 
 services:
   postgres:
     image: postgres:17
+    user: 2000:2000
     volumes:
-      - /data/${VOLUME_ROOT}/postgres:/var/lib/postgresql/data
+      - /data/tyr/$ENV/overlab/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
     ports:
       - ${POSTGRES_PORT}
-    restart: unless-stopped
-    env_file:
-      - /data/${VOLUME_ROOT}/secrets.env
+    secrets:
+      - source: tyr-$ENV-sec-postgres-password
+        target: db-password
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - local
+      - deploy
       #- admin    # Disabled in production until needed.
       #- internet # Needed for development env to expose ports to host.
     deploy:
@@ -49,14 +64,15 @@ services:
 
   cache:
     image: valkey/valkey
-    command: valkey-server --save 60 1
+    user: 2000:2000
+    command: valkey-server --save 60 1 --dir /data
+    volumes:
+      - /data/tyr/$ENV/overlab/cache:/data
     restart: unless-stopped
     ports:
       - ${CACHE_PORT}
-    env_file:
-      - /data/${VOLUME_ROOT}/secrets.env
     healthcheck:
-      test: [ "CMD", "valkey-cli", "ping" ]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -75,12 +91,15 @@ services:
           - ${SWARM_INFRA_CONSTRAINT}
 
   api:
-    image: ghcr.io/ewancoder/overlab-api:${API_TAG}
-    volumes:
-      - /root/dp.pfx:/app/dp.pfx
+    image: ghcr.io/ewancoder-tyr/overlab-api:${API_TAG}
     restart: unless-stopped
-    env_file:
-      - /data/${VOLUME_ROOT}/secrets.env
+    secrets:
+      - source: tyr-$ENV-sec-dp
+        target: dp.pfx
+      - source: tyr-$ENV-sec-env
+        target: global-secrets.env
+      - source: tyr-$ENV-overlab-sec-env
+        target: secrets.env
     environment:
       - HEALTHCHECK_URI=http://localhost:8080/health
     networks:
@@ -100,7 +119,7 @@ services:
           - ${SWARM_SERVICE_CONSTRAINT}
 
   web:
-    image: ghcr.io/ewancoder/overlab-web:${WEB_TAG}
+    image: ghcr.io/ewancoder-tyr/overlab-web:${WEB_TAG}
     restart: unless-stopped
     networks:
       - public

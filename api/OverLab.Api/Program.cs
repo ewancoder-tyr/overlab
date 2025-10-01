@@ -7,7 +7,7 @@ var isDebug = false;
 isDebug = true;
 #endif
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = TyrApplication.CreateBuilder(args);
 
 var config = TyrHostConfiguration.Default(
     builder.Configuration,
