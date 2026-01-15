@@ -1,10 +1,10 @@
 name: test-angular-mutation
+
 inputs:
   folder:
     description: Working directory of Angular project
     required: true
-permissions:
-  contents: read
+
 runs:
   using: composite
   steps:
@@ -32,7 +32,7 @@ runs:
 
     # TODO: Consider writing info to summary & badges.
     - name: Upload mutation test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
-        name: web-mutation-test-results
+        name: ${{ inputs.folder }}-mutation-test-results
         path: ${{ inputs.folder }}/reports/mutation/mutation.html

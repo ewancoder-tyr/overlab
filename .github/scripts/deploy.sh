@@ -57,9 +57,9 @@ fi
 scope="tyr"
 # This folder is used both for deployment files (/tmp/folder) and for data placement (/data/folder).
 folder="${scope}/${DEPLOYMENT_ENVIRONMENT}/${PROJECT_NAME}"
-compose_file="docker-compose.yml"
+compose_file="compose.yml"
 if [[ "${IS_SWARM}" == "true" ]]; then
-    compose_file="swarm-compose.yml" # We use a separate compose file for Swarm deployments.
+    compose_file="compose.stack.yml" # We use a separate compose file for Swarm deployments.
 fi
 
 # Project/Stack name should always have a prefix, even for production.
@@ -144,7 +144,6 @@ if [[ "${IS_SWARM}" != "true" ]]; then
             -v "/tmp/${folder}/db/migrations:/db/migrations" \
             --env-file "/data/${folder}/secrets.env" \
             amacneil/dbmate:latest --wait up
-
         migrationSucceeded="$?"
 
         # Restart the old API container.
@@ -163,27 +162,28 @@ if [[ "${IS_SWARM}" != "true" ]]; then
     echo "Deploying the following services: ${deploy_services}"
     docker compose up -d ${deploy_services} # Cannot quote this, so different services are treated as different entries.
     docker compose cp .env doneman:/.env
-    docker compose cp docker-compose.yml doneman:/docker-compose.yml
+    docker compose cp compose.yml doneman:/compose.yml
     docker compose restart doneman
 else
     # This is only needed for Swarm deployments, regular Compose reads env files by itself.
-    # We should never encase this in "" or it won't expand correctly.
-    export $(cat .env | xargs)
+    set -a
+    source .env
+    set +a
 
-    # Replace all $ENV in the swarm-compose.yml
-    sed -i "s/\$ENV/$ENV/g" swarm-compose.yml
+    # Replace all $ENV in the compose.stack.yml
+    sed -i "s/\$ENV/$ENV/g" compose.stack.yml
     # Replace all the secrets with their latest version.
-    for secret in $(yq -r '.secrets | keys | .[]' swarm-compose.yml); do
+    for secret in $(yq -r '.secrets | keys | .[]' compose.stack.yml); do
         base=$(echo "$secret" | sed -E 's/_[0-9]+$//')
         latest=$(docker secret ls --format '{{.Name}}' | grep -E "^${base}$|^${base}_[0-9]+" | sort -V | tail -n1)
         if [ "$secret" != "$latest" ]; then
 
             echo "Replacing latest secret: $secret -> $latest"
-            sed -i "s/\b$secret\b/$latest/g" swarm-compose.yml
+            sed -i "s/\b$secret\b/$latest/g" compose.stack.yml
 
             # We don't need to replace the pattern anymore because we substitute the value of $ENV to the file beforehand.
             #pattern=$(echo "$secret" | sed "s/$ENV/\\\${ENV}/")
-            #sed -i "s/\b$pattern\b/$latest/g" swarm-compose.yml
+            #sed -i "s/\b$pattern\b/$latest/g" compose.stack.yml
         fi
     done
 
@@ -193,10 +193,10 @@ else
     if ! docker stack ls --format '{{.Name}}' | grep -qF "$project_container_name"; then
         # If the stack is not running - most likely it's the first deployment. Deploying the stack.
         echo "Database is not running, probably first time deployment. Deploying the stack and migrating DB."
-        docker stack deploy "${stack_name}" --compose-file swarm-compose.yml --detach=false
+        docker stack deploy "${stack_name}" --compose-file compose.stack.yml --detach=false
 
         # Migrate the database (more info above, in the non-swarm comments).
-        network_name=$(docker compose -f swarm-compose.yml config --format json | jq -r '.networks["deploy"].name')
+        network_name=$(docker compose -f compose.stack.yml config --format json | jq -r '.networks["deploy"].name')
 
         # Migrate the DB.
         migratedb "${folder}" "${network_name}"
@@ -207,7 +207,7 @@ else
     if [ "$DB_CHANGED" == "true" ]; then
         # If database has changed - migrate the database first.
         echo 'Database is running, and DB scripts have changed. Migrating the database'
-        network_name=$(docker compose -f swarm-compose.yml config --format json | jq -r '.networks["deploy"].name')
+        network_name=$(docker compose -f compose.stack.yml config --format json | jq -r '.networks["deploy"].name')
 
         # Migrate the DB.
         migratedb "${folder}" "${network_name}"
@@ -215,7 +215,7 @@ else
 
     # Deploy the stack.
     echo "Deploying the stack"
-    docker stack deploy "${stack_name}" --compose-file swarm-compose.yml --detach=false
+    docker stack deploy "${stack_name}" --compose-file compose.stack.yml --detach=false
 
     # We don't need to keep the files for Swarm deployments.
     # But keep them for regular (in case we want to stop the stack).

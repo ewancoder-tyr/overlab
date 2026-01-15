@@ -2,14 +2,12 @@
 # Usage: check-changes.sh module1 module2 module3
 # Example: ./check-changes.sh web api db
 # Environment variables:
-#   PREVIOUS_SHA - previous commit SHA, "${{ github.event.before }}"
-#   GITHUB_TOKEN - github access token, "${{ secrets.GITHUB_TOKEN }}"
+#   PREVIOUS_SHA - previous build commit SHA, "${{ github.event.before }}"
 #   GITHUB_REPOSITORY - current github repository, "${{ github.repository }}"
+#   GITHUB_TOKEN - github access token, "${{ secrets.GITHUB_TOKEN }}"
 #   GITHUB_API_URL - github API url, "${{ github.api_url }}"
 #   GITHUB_REF - current branch/tag, "${{ github.ref }}"
 # This script will place module1=true module2=false etc variables into $GITHUB_OUTPUT.
-
-# TODO: Filter out CURRENT deployment by deployment ID or by something, when checking last deployment status.
 
 set -euo pipefail
 
@@ -19,8 +17,8 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ -z "${PREVIOUS_SHA:-}" ] \
-    || [ -z "${GITHUB_TOKEN:-}" ] \
     || [ -z "${GITHUB_REPOSITORY:-}" ] \
+    || [ -z "${GITHUB_TOKEN:-}" ] \
     || [ -z "${GITHUB_API_URL:-}" ] \
     || [ -z "${GITHUB_REF:-}" ]; then
     echo "Mandatory environment variables are not set."
@@ -33,16 +31,16 @@ current_sha=$(git rev-parse HEAD)
 echo "=== Checking changes ==="
 echo "PREVIOUS_SHA: $PREVIOUS_SHA"
 echo "CURRENT_SHA: $current_sha"
-echo "GITHUB_REF: $GITHUB_REF"
 echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
-echo "GITHUB_API_URL: $GITHUB_API_URL"
 echo "GITHUB_TOKEN: ***"
+echo "GITHUB_API_URL: $GITHUB_API_URL"
+echo "GITHUB_REF: $GITHUB_REF"
 echo "modules: ${modules[*]}"
 
 # First ever push, or force-push with commits overwriting, will have PREVIOUS_SHA = "0000...".
 # PREVIOUS_SHA will also be "0000..." for any tags, so for tags we always deploy all modules.
 if [ -z "$PREVIOUS_SHA" ] || [[ "$PREVIOUS_SHA" == "0000000000000000000000000000000000000000" ]]; then
-    echo "First push. Deploying all modules."
+    echo "First push or tag push. Deploying all modules."
     for module in "${modules[@]}"; do
         echo "$module=true" >> "$GITHUB_OUTPUT"
     done
@@ -64,7 +62,7 @@ fi
 #   - Anything in .github/* folder
 #   - docker-compose*/swarm-compose* files
 #   - .env* files
-if grep -qE '^(.github|docker-compose|.env|swarm-compose)' diff; then
+if grep -qE '^(.github|compose|.env)' diff; then
     echo "Critical workflow/config files changed. Deploying all modules."
     for module in "${modules[@]}"; do
         echo "$module=true" >> "$GITHUB_OUTPUT"
@@ -74,10 +72,7 @@ fi
 
 # Get last run status from GitHub API.
 # GITHUB_REF looks like "refs/heads/main", we strip the first part leaving only "main".
-# We get latest GitHub Actions run for this ref.
-# This will not work for tags, so for tags we will not have any conclusions
-# and we will deploy everything every time.
-# This makes sense for tags because we have no idea what the previous release contained.
+# We get latest GitHub Actions that ran for this ref.
 # If last run failed - we deploy everything.
 branch=$(echo "${GITHUB_REF}" | sed 's#refs/heads/##')
 last_run=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \

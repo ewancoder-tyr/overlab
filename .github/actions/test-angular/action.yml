@@ -4,6 +4,7 @@
 # - Writes to GITHUB_STEP_SUMMARY
 # - env.COVERAGE (via GITHUB_ENV) - for internal use
 name: test-angular
+
 inputs:
   folder:
     description: Working directory of Angular project
@@ -11,11 +12,13 @@ inputs:
   coverageId:
     description: Coverage identifier for uploading GIST
     required: true
+  coverageLabel:
+    description: Label for coverage
+    required: true
   gistSecret:
     description: GIST secret for uploading badge status
     required: true
-permissions:
-  contents: read
+
 runs:
   using: composite
   steps:
@@ -59,7 +62,7 @@ runs:
         auth: ${{ inputs.gistSecret }}
         gistID: ${{ env.BADGE_GIST_ID }}
         filename: ${{ inputs.coverageId }}-coverage-${{ github.ref_name }}.json
-        label: Web UI Coverage
+        label: ${{ inputs.coverageLabel }}
         message: ${{ env.COVERAGE }}%
         valColorRange: ${{ env.COVERAGE }}
         maxColorRange: 80

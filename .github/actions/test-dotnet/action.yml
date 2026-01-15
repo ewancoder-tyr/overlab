@@ -5,6 +5,7 @@
 # - Writes to GITHUB_STEP_SUMMARY
 # - env.COVERAGE (via GITHUB_ENV) - for internal use
 name: test-dotnet
+
 inputs:
   folder:
     description: Working directory of .NET solution
@@ -12,20 +13,19 @@ inputs:
   coverageId:
     description: Coverage identifier for uploading GIST
     required: true
+  coverageLabel:
+    description: Label for coverage badge
+    required: true
   gistSecret:
     description: GIST secret for uploading badge status
     required: true
-permissions:
-  contents: read
+
 runs:
   using: composite
   steps:
-    #- name: Checkout repository
-    #  uses: actions/checkout@v4
-
     # TODO: Consider generating package.lock.json file and using cache for all setup-dotnet actions.
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -35,7 +35,7 @@ runs:
       working-directory: ${{ inputs.folder }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: "!cancelled()"
       with:
         name: ${{ inputs.folder }}-test-results
@@ -59,7 +59,6 @@ runs:
         cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
         echo COVERAGE=$(cat code-coverage-results.md | awk -F'|' '{print $2}' | sed -n 's/.*\*\*\([0-9]*\)%.*/\1/p') >> $GITHUB_ENV
 
-    # TODO: Consider adding icon/logo here.
     - name: Create coverage badge
       uses: schneegans/dynamic-badges-action@v1.7.0
       if: "!cancelled()"
@@ -67,7 +66,7 @@ runs:
         auth: ${{ inputs.gistSecret }}
         gistID: ${{ env.BADGE_GIST_ID }}
         filename: ${{ inputs.coverageId }}-coverage-${{ github.ref_name }}.json
-        label: API Coverage
+        label: ${{ inputs.coverageLabel }}
         message: ${{ env.COVERAGE }}%
         valColorRange: ${{ env.COVERAGE }}
         maxColorRange: 80

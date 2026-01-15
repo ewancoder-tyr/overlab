@@ -40,7 +40,7 @@ grep --exclude-dir=.git -rniE ".*//[[:space:]]*todo|.*#[[:space:]]*todo" | while
     
     {
         echo "- \`$todo\`" # Text of the todo.
-        # URL of the file including line numbers, so we can click on it and view conviniently.
+        # URL of the file including line numbers, so we can click on it and view conveniently.
         echo "  > [$file](https://github.com/$GITHUB_REPOSITORY/blob/$current_sha/$file#L$line_number)"
         echo ""
     } >> "$GITHUB_STEP_SUMMARY"

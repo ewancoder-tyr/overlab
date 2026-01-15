@@ -5,9 +5,10 @@
 # Outputs:
 # - "$sha" variable is saved to GITHUB_OUTPUT for future use during deployment
 name: build-angular
+
 inputs:
   folder:
-    description: Working directory of .NET solution
+    description: Working directory of the Angular project
     required: true
   imageName:
     description: Docker image name for this service
@@ -22,15 +23,13 @@ outputs:
   sha:
     description: SHA of the build commit for deployment
     value: ${{ steps.save.outputs.sha }}
-permissions:
-  contents: read
+
 runs:
   using: composite
   steps:
     - name: Set CONFIG_FILE based on environment
       shell: bash
       id: set-config
-      # TODO: Make this configurable / move outside.
       run: |
         if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
           echo "CONFIG_FILE=config.development.ts" >> $GITHUB_ENV

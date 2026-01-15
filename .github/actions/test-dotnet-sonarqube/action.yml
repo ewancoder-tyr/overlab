@@ -7,28 +7,34 @@
 # - Writes to GITHUB_STEP_SUMMARY
 # - env.COVERAGE (via GITHUB_ENV) - for internal use
 name: test-dotnet-sonarqube
+
 inputs:
   sonarToken:
     description: Sonar secret token
     required: true
-permissions:
-  contents: read
+  sonarProjectName:
+    description: Sonar project name
+    required: true
+  folder:
+    description: Solution folder
+    required: true
+
 runs:
   using: composite
   steps:
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: 17
         distribution: "zulu"
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Cache SonarQube Cloud packages
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/sonar/cache
         key: ${{ runner.os }}-sonar
@@ -36,14 +42,14 @@ runs:
 
     - name: Cache SonarQube Cloud scanner
       id: cache-sonar-scanner
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ./.sonar/scanner
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -58,9 +64,8 @@ runs:
       shell: bash
       env:
         SONAR_TOKEN: ${{ inputs.sonarToken }}
-      working-directory: api
+      working-directory: ${{ inputs.folder }}
       run: |
-        ../.sonar/scanner/dotnet-sonarscanner begin /k:"${{ env.SONAR_ORG }}_${{ env.PROJECT_NAME }}-api" /o:"${{ env.SONAR_ORG }}" /d:sonar.token="${{ inputs.sonarToken }}" /d:sonar.host.url="https://sonarcloud.io"
-        rm *.sln
+        ../.sonar/scanner/dotnet-sonarscanner begin /k:"${{ env.SONAR_ORG }}_${{ inputs.sonarProjectName }}" /o:"${{ env.SONAR_ORG }}" /d:sonar.token="${{ inputs.sonarToken }}" /d:sonar.host.url="https://sonarcloud.io"
         dotnet build
         ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ inputs.sonarToken }}"

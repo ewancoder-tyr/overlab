@@ -5,6 +5,7 @@
 # Outputs:
 # - "$sha" variable is saved to GITHUB_OUTPUT for future use during deployment
 name: build-dotnet
+
 inputs:
   folder:
     description: Working directory of .NET solution
@@ -18,12 +19,12 @@ inputs:
   githubToken:
     description: GitHub token
     required: true
+
 outputs:
   sha:
     description: SHA of the build commit for deployment
     value: ${{ steps.save.outputs.sha }}
-permissions:
-  contents: read
+
 runs:
   using: composite
   steps:
