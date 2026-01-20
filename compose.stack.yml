@@ -1,0 +1,145 @@
+# Network pattern: tyr-ENV-APP-net-NAME
+# Secret pattern:  tyr-ENV-APP-sec-NAME
+# User: 2000 (tyr).
+networks:
+  # For internet access, or ability to expose ports locally.
+  internet:
+    name: tyr-$ENV-overlab-net-internet
+  # Local network for inter-container communication within the stack.
+  local:
+    name: tyr-$ENV-overlab-net-local
+    internal: true
+  # Deployment network for deploying database migrations, attachable for this purpose.
+  deploy:
+    name: tyr-$ENV-overlab-net-deploy
+    attachable: true
+    internal: true
+  # Reverse proxy network.
+  public:
+    name: tyr-$ENV-net-proxy
+    external: true
+  # Infrastructure (Seq logging) network.
+  infra:
+    name: tyr-$ENV-net-infrastructure
+    external: true
+  # Administration (PgAdmin, RedisInsight) network.
+  admin:
+    name: tyr-$ENV-net-administration
+    external: true
+
+secrets:
+  # DB password.
+  tyr-$ENV-sec-postgres-password:
+    external: true
+  # DataProtection PFX certificate.
+  tyr-$ENV-sec-dp:
+    external: true
+  # Global environment variables shared across apps for this env.
+  tyr-$ENV-sec-env:
+    external: true
+  # Stack-specific environment variables.
+  tyr-$ENV-overlab-sec-env:
+    external: true
+
+services:
+  postgres:
+    image: postgres:18
+    user: 2000:2000
+    volumes:
+      - /data/tyr/$ENV/overlab/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    secrets:
+      - source: tyr-$ENV-sec-postgres-password
+        target: db-password
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - local
+      - deploy
+      #- admin    # Disabled in production until needed.
+      #- internet # Needed for local env to expose ports to host.
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 70m
+      placement:
+        constraints:
+          - node.labels.tyr-${ENV}-infra==true
+
+  cache:
+    image: valkey/valkey
+    user: 2000:2000
+    command: valkey-server --save 60 1 --dir /data
+    volumes:
+      - /data/tyr/$ENV/overlab/cache:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - local
+      #- admin    # Disabled in production until needed.
+      #- internet # Needed for development env to expose ports to host.
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 20m
+      placement:
+        constraints:
+          - node.labels.tyr-${ENV}-infra==true
+
+  api:
+    image: ghcr.io/ewancoder-tyr/overlab-api:${API_TAG}
+    restart: unless-stopped
+    secrets:
+      - source: tyr-$ENV-sec-dp
+        target: dp.pfx
+      - source: tyr-$ENV-sec-env
+        target: global-secrets.env
+      - source: tyr-$ENV-overlab-sec-env
+        target: secrets.env
+    environment:
+      - HEALTHCHECK_URI=http://localhost:8080/health
+    networks:
+      - local
+      - public # Reverse proxy.
+      - infra  # Seq logging.
+    deploy:
+      endpoint_mode: dnsrr # For smart load balancing with Caddy.
+      replicas: ${API_REPLICAS}
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 70m
+      placement:
+        constraints:
+          - node.labels.tyr-${ENV}-worker==true
+
+  web:
+    image: ghcr.io/ewancoder-tyr/overlab-web:${WEB_TAG}
+    restart: unless-stopped
+    networks:
+      - public # Reverse proxy.
+    deploy:
+      endpoint_mode: dnsrr # For smart load balancing with Caddy.
+      replicas: ${WEB_REPLICAS}
+      resources:
+        limits:
+          memory: 100m
+        reservations:
+          memory: 20m
+      placement:
+        constraints:
+          - node.labels.tyr-${ENV}-worker==true

@@ -1,0 +1,37 @@
+$light-theme: (
+  font-family: 'Lora',
+  primary-color: #111,
+  primary-color-rgb: '17, 17, 17',
+  background-url: url('/bg.jpg'),
+  background: #fafafa,
+  background-filter: rgba(255, 255, 255, 0.95),
+  nav-btn-color: rgba(204, 221, 204, 0.8),
+);
+
+$dark-theme: (
+  font-family: 'Lora',
+  primary-color: #ddd,
+  primary-color-rgb: '221, 221, 221',
+  background-url: url('/bg.jpg'),
+  background: #2e2e2e,
+  background-filter: rgba(0, 0, 0, 0.9),
+  nav-btn-color: rgba(58, 81, 30, 0.8),
+);
+
+@mixin theme($theme) {
+  --font-family: #{map-get($theme, font-family)};
+  --primary-color: #{map-get($theme, primary-color)};
+  --primary-color-rgb: #{map-get($theme, primary-color-rgb)};
+  --background-url: #{map-get($theme, background-url)};
+  --background: #{map-get($theme, background)};
+  --background-filter: #{map-get($theme, background-filter)};
+  --nav-btn-color: #{map-get($theme, nav-btn-color)};
+}
+
+.light-theme {
+  @include theme($light-theme);
+}
+
+.dark-theme {
+  @include theme($dark-theme);
+}

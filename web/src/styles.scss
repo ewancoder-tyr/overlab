@@ -1,0 +1,12 @@
+@import 'themes';
+
+html {
+  font-family: var(--font-family);
+  color: var(--primary-color);
+  background:
+    linear-gradient(var(--background-filter), var(--background-filter)), var(--background-url);
+}
+
+html, body {
+  height: 100vh;
+}

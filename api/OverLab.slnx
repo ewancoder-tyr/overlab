@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="OverLab.Api.Tests\OverLab.Api.Tests.csproj" Type="Classic C#" />
+  <Project Path="OverLab.Api\OverLab.Api.csproj" Type="Classic C#" />
+</Solution>
