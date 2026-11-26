@@ -1,0 +1,107 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* One row of chips that scrolls sideways, so 15 muscle groups do not push the list down. */
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 -1rem;
+  padding: 0.25rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter {
+  /*
+   * The chip contains a visually hidden label, which is absolutely positioned. Making the chip
+   * its positioning context keeps that label inside the scrolling row; without it the label is
+   * placed relative to the page and stretches the page sideways.
+   */
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter--on {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.filter__dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+.item {
+  /* Takes the room between the drawing and the badge, so names line up in a column. */
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A row: the exercise (opens logging) and, beside it, a button that opens its statistics. */
+.entry {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry__main {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+/* The star: an outline when off, solid yellow when the exercise is a favorite. */
+.entry__star {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  align-items: center;
+  width: 3rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linejoin: round;
+  }
+}
+
+.entry__star--on {
+  color: var(--accent-ink);
+
+  svg {
+    fill: currentColor;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}

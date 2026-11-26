@@ -1,0 +1,44 @@
+:host {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/*
+ * The drawings come in different proportions (a lying figure is wide, a standing one tall).
+ * Every frame gets the same box and the drawing is fitted inside it, so pages line up.
+ */
+.frame {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: var(--drawing-filter);
+}
+
+:host(.thumbnail) {
+  display: block;
+  flex: none;
+  width: 3rem;
+}
+
+/*
+ * A done exercise is drawn in the done colour (green by default). The drawings are white SVG
+ * files shown through <img>, and CSS cannot reach inside an <img> to change its colour. The
+ * trick: `drop-shadow` paints a copy of the drawing's shape in any colour. The shadow is cast
+ * exactly one thumbnail width to the right, then the image is moved one width to the left. That
+ * puts the green copy where the drawing was and the white original outside the box, where
+ * `overflow: hidden` cuts it off.
+ */
+:host(.thumbnail.done) {
+  overflow: hidden;
+
+  .frame {
+    transform: translateX(-3rem);
+    filter: drop-shadow(3rem 0 0 var(--done));
+  }
+}
+
+/* Nothing to show (no drawings for this exercise): take up no room at all. Last, so it wins. */
+:host:empty {
+  display: none;
+}

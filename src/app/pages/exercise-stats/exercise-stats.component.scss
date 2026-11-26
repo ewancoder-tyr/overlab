@@ -1,0 +1,61 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.back {
+  font-size: 0.875rem;
+}
+
+.title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.text {
+  margin: 0;
+}
+
+.session {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.session__date {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* A cardio session: its numbers on one line, then the verdict against the session before. */
+.session__numbers {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.session__verdict {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.session__verdict--up {
+  color: var(--success);
+}
+
+.session__verdict--down {
+  color: var(--danger);
+}
+
+/* The switch between workout sets and standalone ones, under the title. */
+.lanes {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}

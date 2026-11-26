@@ -1,0 +1,8 @@
+@if (workout(); as workout) {
+  <olab-stopwatch
+    [class.stopwatch--inline]="inline()"
+    [label]="t().workout"
+    [since]="workout.startedAt"
+    [until]="workout.endsAt"
+  />
+}

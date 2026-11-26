@@ -1,0 +1,57 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workout-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.workout-item__name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* The level summary: less padding than a card with a heading, to keep the gauges in view. */
+.card--slim {
+  padding-block: 0.75rem;
+}
+
+/*
+ * The way to the History page: a text link at the right, with a full 44px touch target. The
+ * negative margins take back most of that height, so the cards below barely move down.
+ */
+.history {
+  display: inline-flex;
+  align-self: flex-end;
+  align-items: center;
+  gap: 0.125rem;
+  min-height: 2.75rem;
+  margin-block: -0.5rem;
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}

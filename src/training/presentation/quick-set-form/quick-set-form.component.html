@@ -1,0 +1,75 @@
+<olab-stepper
+  [label]="loadLabel()"
+  [unit]="unitText()"
+  [step]="loadStep()"
+  [min]="isBodyweight() ? undefined : 0"
+  [decimal]="true"
+  [(value)]="load"
+/>
+<olab-stepper [label]="t().reps" [min]="0" [(value)]="reps" />
+@if (showPartials()) {
+  <olab-stepper [label]="t().partialsAfter" [min]="0" [(value)]="partials" />
+}
+
+<div class="options">
+  @if (!showPartials()) {
+    <button
+      type="button"
+      class="chip"
+      [attr.aria-label]="t().addPartialsLabel"
+      (click)="partialsOpened.set(true)"
+    >
+      {{ t().addPartials }}
+    </button>
+  }
+  <button
+    type="button"
+    class="chip"
+    [class.chip--on]="effort() === 'failure'"
+    [attr.aria-pressed]="effort() === 'failure'"
+    [attr.aria-label]="t().toFailureLabel"
+    (click)="toggleEffort('failure')"
+  >
+    {{ t().toFailure }}
+  </button>
+  <button
+    type="button"
+    class="chip"
+    [class.chip--light-on]="effort() === 'light'"
+    [attr.aria-pressed]="effort() === 'light'"
+    (click)="toggleEffort('light')"
+  >
+    {{ t().light }}
+  </button>
+  <button
+    type="button"
+    class="chip"
+    [class.chip--easy-on]="effort() === 'easy'"
+    [attr.aria-pressed]="effort() === 'easy'"
+    [attr.aria-label]="t().easyLabel"
+    (click)="toggleEffort('easy')"
+  >
+    {{ t().easy }}
+  </button>
+  <!-- Not an effort: where the set belongs. It stays as chosen from one set to the next. -->
+  <button
+    type="button"
+    class="chip"
+    [class.chip--standalone-on]="standalone()"
+    [attr.aria-pressed]="standalone()"
+    [attr.aria-label]="t().standaloneLabel"
+    (click)="standalone.set(!standalone())"
+  >
+    {{ t().standalone }}
+  </button>
+</div>
+
+@if (isBodyweight()) {
+  <p class="hint">{{ t().bodyweightHint }}</p>
+}
+
+@if (error(); as message) {
+  <p class="error" role="alert">{{ message | localize }}</p>
+}
+
+<olab-log-button [label]="t().log" (pressed)="submit()" />

@@ -1,0 +1,46 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.records {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.records__row + .records__row td {
+  border-top: 1px solid var(--border);
+}
+
+.records td {
+  padding: 0.375rem 0;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.records__load {
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Yellow is for data marks: the reps are the number to beat. */
+.records__reps {
+  padding-left: 0.5rem;
+  color: var(--accent-ink);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.records__date {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  text-align: right;
+}
+
+.caption {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}

@@ -1,0 +1,127 @@
+@if (exercise(); as exercise) {
+  <section class="card" aria-labelledby="stats-heading">
+    <a class="back" routerLink="/exercises">{{ t().allExercises }}</a>
+    <div class="title">
+      <h2 id="stats-heading">{{ exercise.name | localize }}</h2>
+      <a class="button button--primary button--small" [routerLink]="['/exercises', exercise.id]">{{
+        cardio() ? t().logCardio : t().logSets
+      }}</a>
+    </div>
+    @if (!cardio() && hasBoth()) {
+      <!-- Two histories, never mixed: pick which one the page is about. -->
+      <div class="lanes" role="group" [attr.aria-label]="t().whichSets">
+        <button
+          type="button"
+          class="button button--small"
+          [class.button--primary]="!standalone()"
+          [attr.aria-pressed]="!standalone()"
+          (click)="standalone.set(false)"
+        >
+          {{ t().inWorkouts }}
+        </button>
+        <button
+          type="button"
+          class="button button--small"
+          [class.button--primary]="standalone()"
+          [attr.aria-pressed]="standalone()"
+          (click)="standalone.set(true)"
+        >
+          {{ t().standalone }}
+        </button>
+      </div>
+    }
+  </section>
+
+  <!--
+    The numbers to beat, first on the page because they are what the lifter came to look up:
+    by load for lifting, by distance (or calories, or time) for cardio.
+  -->
+  @if (cardio() ? cardioProgress().length > 0 : sessions().length > 0) {
+    <section class="card" aria-labelledby="records-heading">
+      <h3 id="records-heading">{{ t().records }}</h3>
+      @if (cardio()) {
+        <olab-cardio-record-table [rows]="cardioRecordTable()" />
+      } @else {
+        <olab-record-table [exercise]="exercise" [rows]="recordTable()" />
+      }
+    </section>
+  }
+
+  <!-- Lifting is charted as load and reps, cardio as distance, speed and time. -->
+  <section class="card" aria-labelledby="progress-heading">
+    <h3 id="progress-heading">{{ t().progress }}</h3>
+    @if (cardio()) {
+      @if (cardioProgress().length > 0) {
+        <olab-cardio-progress [history]="cardioProgress()" />
+      } @else {
+        <p class="muted">{{ t().nothing }}</p>
+      }
+    } @else {
+      @if (sessions().length > 0) {
+        <olab-exercise-progress
+          [exercise]="exercise"
+          [sessions]="sessions()"
+          [inProgressSince]="workoutInProgress()"
+          [stalledFor]="stalledFor()"
+        />
+      } @else {
+        <p class="muted">{{ t().nothing }}</p>
+      }
+    }
+  </section>
+
+  <section class="card" aria-labelledby="muscles-heading">
+    <!-- A cardio exercise involves no muscle group: there is nothing to draw on the map. -->
+    @if (exercise.involvements.length > 0) {
+      <h3 id="muscles-heading">{{ t().muscles }}</h3>
+      <olab-muscle-map [involvements]="exercise.involvements" />
+    } @else {
+      <h3 id="muscles-heading">{{ t().cardio }}</h3>
+      <p class="muted">{{ t().noVolume }}</p>
+    }
+    @if (exercise.form; as form) {
+      <h3>{{ t().form }}</h3>
+      <olab-exercise-figure [exercise]="exercise" />
+      <p class="text">{{ form | localize }}</p>
+    }
+    @if (exercise.warmUp; as warmUp) {
+      <h3>{{ t().warmUp }}</h3>
+      <p class="text">{{ warmUp | localize }}</p>
+    }
+  </section>
+
+  @if (cardio() && cardioHistory().length > 0) {
+    <section class="card" aria-labelledby="cardio-history-heading">
+      <h3 id="cardio-history-heading">{{ t().history }}</h3>
+      @for (session of cardioHistory(); track session.startedAt) {
+        <div class="session">
+          <span class="session__date">{{ session.startedAt | localDate: 'EEE d MMM y' }}</span>
+          <span class="session__numbers">{{ session.numbers }}</span>
+          <span
+            class="session__verdict"
+            [class]="'session__verdict session__verdict--' + session.tone"
+          >
+            {{ session.verdict }}
+          </span>
+        </div>
+      }
+    </section>
+  } @else if (history().length > 0) {
+    <section class="card" aria-labelledby="history-heading">
+      <h3 id="history-heading">{{ t().history }}</h3>
+      @for (session of history(); track session.workoutStartedAt) {
+        <div class="session">
+          <span class="session__date">{{
+            session.workoutStartedAt | localDate: 'EEE d MMM y'
+          }}</span>
+          <olab-set-grid [sets]="session.sets" [tones]="tones()" [compact]="true" />
+        </div>
+      }
+    </section>
+  }
+} @else {
+  <section class="card">
+    <h2>{{ t().unknown }}</h2>
+    <a class="button" routerLink="/exercises">{{ t().choose }}</a>
+  </section>
+}

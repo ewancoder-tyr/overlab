@@ -1,0 +1,507 @@
+<!-- Language and colour scheme share a card: two quick choices, each a row of two. -->
+<section class="card">
+  <!-- Each option is written in its own language, so it is found whatever the page is in. -->
+  <h2 id="language-heading">{{ t().language }}</h2>
+  <div class="choice" role="group" aria-labelledby="language-heading">
+    @for (option of languages; track option.id) {
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="language() === option.id"
+        [attr.aria-pressed]="language() === option.id"
+        [attr.lang]="option.id"
+        (click)="setLanguage(option.id)"
+      >
+        {{ option.name }}
+      </button>
+    }
+  </div>
+  <h2 id="scheme-heading">{{ t().colorScheme }}</h2>
+  <div class="choice" role="group" aria-labelledby="scheme-heading">
+    @for (option of colorSchemes(); track option.id) {
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="colorScheme() === option.id"
+        [attr.aria-pressed]="colorScheme() === option.id"
+        (click)="setColorScheme(option.id)"
+      >
+        {{ option.name }}
+      </button>
+    }
+  </div>
+</section>
+
+<section class="card">
+  <!--
+    A native radio group: the fieldset and legend name it, the arrow keys move between options
+    and a screen reader announces "1 of 3". Each option is a label wrapping its radio, so the
+    whole 44 px row is the touch target.
+  -->
+  <fieldset class="focus">
+    <legend class="focus__legend">
+      <h2>{{ t().focus }}</h2>
+    </legend>
+    <p class="muted">{{ t().focusIntro }}</p>
+    <div class="choice choice--stack">
+      @for (option of focuses(); track option.id) {
+        <label class="choice__option" [class.choice__option--on]="focus() === option.id">
+          <input
+            class="visually-hidden"
+            type="radio"
+            name="training-focus"
+            [value]="option.id"
+            [checked]="focus() === option.id"
+            (change)="setFocus(option.id)"
+          />
+          {{ option.name }}
+        </label>
+      }
+    </div>
+  </fieldset>
+</section>
+
+<section class="card" aria-labelledby="days-heading">
+  <h2 id="days-heading">{{ t().gymDays }}</h2>
+
+  <div class="choice" role="group" [attr.aria-label]="t().howPlanned">
+    <button
+      type="button"
+      class="choice__option"
+      [class.choice__option--on]="schedule()?.kind === 'weekdays'"
+      [attr.aria-pressed]="schedule()?.kind === 'weekdays'"
+      (click)="chooseWeekdays()"
+    >
+      {{ t().daysOfWeek }}
+    </button>
+    <button
+      type="button"
+      class="choice__option"
+      [class.choice__option--on]="schedule()?.kind === 'interval'"
+      [attr.aria-pressed]="schedule()?.kind === 'interval'"
+      (click)="chooseInterval()"
+    >
+      {{ t().everyFewDays }}
+    </button>
+  </div>
+
+  @if (schedule(); as schedule) {
+    @if (schedule.kind === 'weekdays') {
+      <div class="days" role="group" [attr.aria-label]="t().daysOfWeek">
+        @for (day of weekdays(); track day.id) {
+          <button
+            type="button"
+            class="day"
+            [class.day--on]="day.on"
+            [attr.aria-pressed]="day.on"
+            [attr.aria-label]="day.name"
+            (click)="toggleDay(day.id)"
+          >
+            {{ day.short }}
+          </button>
+        }
+      </div>
+    } @else {
+      <olab-stepper
+        [label]="t().trainEvery"
+        [unit]="t().days(schedule.everyDays)"
+        [min]="1"
+        [value]="schedule.everyDays"
+        (valueChange)="setEveryDays($event)"
+      />
+      <p class="muted">
+        {{ t().countedFrom }} {{ schedule.startDate | localDate: 'EEE d MMM' }}{{ t().restart }}
+      </p>
+      <div class="choice" role="group" [attr.aria-label]="t().nextGymDay">
+        <button
+          type="button"
+          class="choice__option"
+          [class.choice__option--on]="nextGymDayOffset() === 0"
+          [attr.aria-pressed]="nextGymDayOffset() === 0"
+          (click)="startCycle(0)"
+        >
+          {{ t().today }}
+        </button>
+        <button
+          type="button"
+          class="choice__option"
+          [class.choice__option--on]="nextGymDayOffset() === 1"
+          [attr.aria-pressed]="nextGymDayOffset() === 1"
+          (click)="startCycle(1)"
+        >
+          {{ t().tomorrow }}
+        </button>
+      </div>
+      <!-- Only here: with fixed weekdays the lit chips already show which days they are. -->
+      <div>
+        <span class="eyebrow">{{ t().nextGymDays }}</span>
+        <ul class="upcoming">
+          @for (day of upcoming(); track day) {
+            <li class="upcoming__day">{{ day | localDate: 'EEE d MMM' }}</li>
+          }
+        </ul>
+      </div>
+    }
+  }
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message | localize }}</p>
+  }
+</section>
+
+<section class="card" aria-labelledby="rotation-heading">
+  <h2 id="rotation-heading">{{ t().rotation }}</h2>
+  <olab-stepper
+    [label]="t().rotateBetween"
+    [unit]="t().workouts(rotation())"
+    [min]="1"
+    [value]="rotation()"
+    (valueChange)="setRotation($event)"
+  />
+  <p class="muted">
+    @if (rotation() === 1) {
+      {{ t().sameEveryTime }}
+    } @else {
+      {{ t().inTurn(rotation()) }}
+    }
+  </p>
+</section>
+
+<section class="card" aria-labelledby="reminders-heading">
+  <h2 id="reminders-heading">{{ t().reminders }}</h2>
+  <p class="muted">{{ t().remindersIntro }}</p>
+
+  <label class="field">
+    <span class="field__label">{{ t().remindAt }}</span>
+    <input
+      #time
+      class="input time"
+      type="time"
+      [value]="reminderTime()"
+      (change)="setTime(time.value)"
+    />
+  </label>
+
+  <!--
+    Solo reminders: one alarm per exercise, each with its own days and time. A row opens its
+    editor in place, one at a time.
+  -->
+  <div class="solo">
+    <h3 class="eyebrow">{{ t().soloReminders }}</h3>
+    <p class="muted">{{ t().soloIntro }}</p>
+
+    @if (soloReminders().length > 0) {
+      <ul class="solo__list">
+        @for (reminder of soloReminders(); track reminder.exerciseId) {
+          <li class="solo__item">
+            <button
+              type="button"
+              class="solo__row"
+              [attr.aria-expanded]="openSolo() === reminder.exerciseId"
+              (click)="toggleSolo(reminder.exerciseId)"
+            >
+              <span class="solo__name">{{ reminder.name }}</span>
+              <span class="solo__summary">{{ reminder.summary }}</span>
+            </button>
+            @if (openSolo() === reminder.exerciseId) {
+              <olab-solo-reminder-editor class="solo__editor" [exerciseId]="reminder.exerciseId" />
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (soloFull()) {
+      <p class="muted">{{ t().soloFull(maxSolo) }}</p>
+    } @else if (soloCandidates().habits.length + soloCandidates().favorites.length === 0) {
+      <p class="muted">{{ t().noSoloCandidates }}</p>
+    } @else {
+      <label class="field">
+        <span class="field__label">{{ t().addSolo }}</span>
+        <!--
+          Choosing an exercise adds its reminder at once. The list then re-renders without that
+          exercise, which puts the menu back on its first, empty option.
+        -->
+        <select #pick class="input" (change)="addSolo(pick.value); pick.value = ''">
+          <option value="">{{ t().chooseExercise }}</option>
+          @if (soloCandidates().habits.length > 0) {
+            <optgroup [label]="t().soloHabits">
+              @for (exercise of soloCandidates().habits; track exercise.id) {
+                <option [value]="exercise.id">{{ exercise.name }}</option>
+              }
+            </optgroup>
+          }
+          @if (soloCandidates().favorites.length > 0) {
+            <optgroup [label]="t().favorites">
+              @for (exercise of soloCandidates().favorites; track exercise.id) {
+                <option [value]="exercise.id">{{ exercise.name }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </label>
+    }
+  </div>
+
+  @switch (reminderState()) {
+    @case ('unsupported') {
+      <p class="muted">{{ t().unsupported }}</p>
+    }
+    @case ('blocked') {
+      <p class="error">{{ t().blocked }}</p>
+    }
+    @case ('off') {
+      <div class="actions">
+        <button
+          type="button"
+          class="button button--primary"
+          [disabled]="busy() || !canRemind()"
+          (click)="enableReminders()"
+        >
+          {{ t().turnOn }}
+        </button>
+      </div>
+      @if (!canRemind()) {
+        <p class="muted">{{ t().chooseDaysFirst }}</p>
+      }
+    }
+    @case ('on') {
+      <p class="on"><span class="on__dot" aria-hidden="true"></span> {{ t().onForDevice }}</p>
+      <div class="actions">
+        <button
+          type="button"
+          class="button button--ghost"
+          [disabled]="busy()"
+          (click)="disableReminders()"
+        >
+          {{ t().turnOff }}
+        </button>
+      </div>
+    }
+  }
+
+  @if (reminderError(); as message) {
+    <p class="error" role="alert">{{ message | localize }}</p>
+  }
+</section>
+
+<section class="card" aria-labelledby="experience-heading">
+  <h2 id="experience-heading">{{ t().experience }}</h2>
+  <p class="muted">{{ t().experienceIntro }}</p>
+  <div class="choice" role="group" aria-labelledby="experience-heading">
+    @for (option of [false, true]; track option) {
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="gamification() === option"
+        [attr.aria-pressed]="gamification() === option"
+        (click)="setGamification(option)"
+      >
+        {{ option ? t().on : t().off }}
+      </button>
+    }
+  </div>
+  @if (gamification()) {
+    <p class="muted">
+      @if (experienceEpoch(); as epoch) {
+        {{ t().countingSince }} {{ epoch | localDate: 'd MMM y, HH:mm' }}.
+      } @else {
+        {{ t().countingAll }}
+      }
+    </p>
+    <!-- Starting over cannot be undone (only another start over), so it takes a second tap. -->
+    <button type="button" class="button button--danger" (click)="resetExperience()">
+      {{ resetArmed() ? t().startOverConfirm : t().startOver }}
+    </button>
+    <olab-leaderboard-switch />
+  }
+</section>
+
+<!--
+  Settings most people never touch. A native disclosure: collapsed by default so the everyday
+  settings stay short, and keyboard and screen-reader friendly without any script.
+-->
+<details class="card advanced">
+  <summary class="advanced__summary">
+    <h2>{{ t().advanced }}</h2>
+  </summary>
+  <!--
+    A denser layout than the everyday cards above: one row per setting, its name beside a
+    compact stepper and a short hint under both, grouped under small headings. More settings
+    for fine tuning will land here, so it has to stay scannable as it grows.
+  -->
+  <div class="advanced__body">
+    <section class="tune-group" aria-labelledby="rest-heading">
+      <h3 id="rest-heading" class="eyebrow">{{ t().restAlert }}</h3>
+
+      <!-- Steps of 15 s; one step below 0:15 is "Off" (0). -->
+      <div class="tune">
+        <span class="tune__name">{{ t().restAlertAfter }}</span>
+        <olab-stepper
+          compact
+          [label]="t().restAlertAfter"
+          [min]="0"
+          [max]="maxRestAlert"
+          [step]="restAlertStep"
+          [format]="formatRestAlert"
+          [value]="restAlert()"
+          (valueChange)="setRestAlert($event)"
+        />
+        <p class="tune__hint">{{ t().restAlertHint }}</p>
+      </div>
+
+      <div class="tune">
+        <span class="tune__name">{{ t().switchRestAlertAfter }}</span>
+        <olab-stepper
+          compact
+          [label]="t().switchRestAlertAfter"
+          [min]="0"
+          [max]="maxSwitchRestAlert"
+          [step]="restAlertStep"
+          [format]="formatRestAlert"
+          [value]="switchRestAlert()"
+          (valueChange)="setSwitchRestAlert($event)"
+        />
+        <p class="tune__hint">
+          {{
+            restAlert() === 0 && switchRestAlert() === 0
+              ? t().restAlertOff
+              : t().switchRestAlertHint
+          }}
+        </p>
+      </div>
+    </section>
+
+    <section class="tune-group" aria-labelledby="targets-heading">
+      <h3 id="targets-heading" class="eyebrow">{{ t().targets }}</h3>
+
+      <div class="tune">
+        <span class="tune__name">{{ t().targetWindow }}</span>
+        <olab-stepper
+          compact
+          [label]="t().targetWindow"
+          [min]="minTargetWindow"
+          [max]="maxTargetWindow"
+          [format]="formatNumber"
+          [unit]="t().days(targetWindow())"
+          [value]="targetWindow()"
+          (valueChange)="setTargetWindow($event)"
+        />
+        <p class="tune__hint">{{ t().targetWindowIntro }}</p>
+      </div>
+
+      <!-- Each target only when the focus includes what it measures. -->
+      @if (showsLifting()) {
+        <div class="tune">
+          <span class="tune__name">{{ t().volumeTarget }}</span>
+          <olab-stepper
+            compact
+            [label]="t().volumeTarget"
+            [min]="minVolumeTarget"
+            [max]="maxVolumeTarget"
+            [format]="formatVolumeTarget"
+            [value]="volumeTarget()"
+            (valueChange)="setVolumeTarget($event)"
+          />
+          <p class="tune__hint">{{ t().volumeTargetIntro(targetWindow()) }}</p>
+        </div>
+
+        <div class="tune">
+          <span class="tune__name">{{ t().lightSet }}</span>
+          <olab-stepper
+            compact
+            [label]="t().lightSet"
+            [min]="0"
+            [max]="maxLightSetPercent"
+            [step]="lightSetStep"
+            [format]="formatPercent"
+            [value]="lightSetPercent()"
+            (valueChange)="setLightSetPercent($event)"
+          />
+          <p class="tune__hint">{{ t().lightSetIntro }}</p>
+        </div>
+      }
+
+      @if (showsCardio()) {
+        <div class="tune">
+          <span class="tune__name">{{ t().cardioGoal }}</span>
+          <olab-stepper
+            compact
+            [label]="t().cardioGoal"
+            [min]="minCardioGoal"
+            [max]="maxCardioGoal"
+            [step]="cardioGoalStep"
+            [format]="formatCardioGoal"
+            [value]="cardioGoal()"
+            (valueChange)="setCardioGoal($event)"
+          />
+          <p class="tune__hint">{{ t().cardioGoalIntro(targetWindow()) }}</p>
+        </div>
+      }
+    </section>
+
+    <section class="tune-group" aria-labelledby="stalls-heading">
+      <h3 id="stalls-heading" class="eyebrow">{{ t().stalls }}</h3>
+
+      <div class="tune">
+        <span class="tune__name">{{ t().stallAfter }}</span>
+        <olab-stepper
+          compact
+          [label]="t().stallAfter"
+          [min]="0"
+          [max]="maxStallThreshold"
+          [format]="formatStallThreshold"
+          [unit]="stallUnit()"
+          [value]="stallThreshold()"
+          (valueChange)="setStallThreshold($event)"
+        />
+        <p class="tune__hint">
+          {{ stallThreshold() === 0 ? t().stallOff : t().stallIntro }}
+        </p>
+      </div>
+
+      <!-- Which muscle groups a stall marks on Week: pointless with stalls off or lifting hidden. -->
+      @if (showsLifting() && stallThreshold() > 0) {
+        <div class="tune">
+          <span class="tune__name">{{ t().stallInvolvement }}</span>
+          <olab-stepper
+            compact
+            [label]="t().stallInvolvement"
+            [min]="0"
+            [max]="maxStallInvolvement"
+            [step]="stallInvolvementStep"
+            [format]="formatPercent"
+            [value]="stallInvolvement()"
+            (valueChange)="setStallInvolvement($event)"
+          />
+          <p class="tune__hint">{{ t().stallInvolvementIntro }}</p>
+        </div>
+      }
+    </section>
+  </div>
+</details>
+
+<section class="card" aria-labelledby="about-heading">
+  <!--
+    The heading is also the hidden way into the developer settings: ten taps open them. A real
+    button inside the heading (not a click handler on the h2) keeps it reachable by keyboard.
+  -->
+  <h2 id="about-heading">
+    <button type="button" class="about__title" (click)="tapAbout()">{{ t().about }}</button>
+  </h2>
+  <p class="muted">{{ t().aboutText(version) }}</p>
+  <div class="actions">
+    <a class="button" routerLink="/whats-new">{{ t().whatsNew }}</a>
+  </div>
+  @if (developerTapsLeft(); as left) {
+    <!-- Only over the last few taps, so a stray tap or two shows nothing. -->
+    @if (left <= 5) {
+      <p class="muted" role="status">{{ t().developerTapsLeft(left) }}</p>
+    }
+  }
+</section>
+
+<!-- Last on the page: tools for trying the app out and tracking down problems, not settings. -->
+@if (developerUnlocked()) {
+  <olab-developer-settings />
+}

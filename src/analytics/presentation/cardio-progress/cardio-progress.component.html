@@ -1,0 +1,82 @@
+@if (summary().compared > 0) {
+  <p class="headline">
+    <strong class="headline__number"
+      >{{ summary().reached }} {{ t().of }} {{ summary().compared }}</strong
+    >
+    {{ t().matchedBefore }}
+  </p>
+}
+
+<svg class="chart" [attr.viewBox]="layout().viewBox" role="img" [attr.aria-label]="description()">
+  <!-- Highlight behind the selected session, across all the charts. -->
+  @if (selected(); as column) {
+    <rect
+      class="highlight"
+      y="0"
+      rx="4"
+      [attr.x]="column.x - 11"
+      [attr.height]="layout().height"
+      width="22"
+    />
+  }
+
+  @for (panel of panels(); track panel.title) {
+    <text class="axis-label" x="0" [attr.y]="panel.titleY">{{ panel.title }}</text>
+    <path class="line" [attr.d]="panel.line" />
+    @for (mark of panel.marks; track mark.column) {
+      <circle class="dot" r="4" [attr.cx]="mark.x" [attr.cy]="mark.y" />
+      <!-- `columns()[mark.column]` is this mark's session: its label rules and selection. -->
+      @if (columns()[mark.column]; as column) {
+        @if (column.isEndpoint || column === selected()) {
+          <text
+            class="value"
+            [attr.text-anchor]="column.labelAnchor"
+            [attr.x]="column.labelX"
+            [attr.y]="mark.y - labelGap"
+          >
+            {{ mark.label }}
+          </text>
+        }
+      }
+    }
+  }
+
+  @for (column of columns(); track column.startedAt) {
+    <text
+      class="verdict"
+      [class]="'verdict verdict--' + column.verdict"
+      text-anchor="middle"
+      [attr.x]="column.x"
+      [attr.y]="layout().verdictY"
+    >
+      {{ column.glyph }}
+    </text>
+  }
+
+  <!-- Invisible columns on top of everything: tapping or hovering one selects that session. -->
+  @for (column of columns(); track column.startedAt; let index = $index) {
+    <rect
+      class="hit"
+      y="0"
+      [attr.x]="column.hitX"
+      [attr.width]="column.hitWidth"
+      [attr.height]="layout().height"
+      (pointerenter)="selectedIndex.set(index)"
+      (click)="selectedIndex.set(index)"
+    />
+  }
+</svg>
+
+<p class="caption">{{ t().caption }}</p>
+
+@if (selected(); as column) {
+  <div class="detail" aria-live="polite">
+    <p class="detail__line">
+      <span class="detail__date">{{ column.startedAt | localDate: 'EEE d MMM' }}</span>
+      <strong class="detail__value">{{ column.numbers }}</strong>
+    </p>
+    <p class="detail__verdict" [class]="'detail__verdict verdict--' + column.verdict">
+      {{ column.glyph }} {{ column.verdictText }}
+    </p>
+  </div>
+}

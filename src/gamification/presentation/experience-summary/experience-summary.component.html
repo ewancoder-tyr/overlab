@@ -1,0 +1,12 @@
+<!-- The number and the bar are drawn for the eye; a screen reader gets one sentence. -->
+<div class="summary" role="img" [attr.aria-label]="label()">
+  <span class="summary__level" aria-hidden="true">
+    <span class="summary__word">{{ t().lv }}</span>
+    <strong class="summary__number">{{ level() }}</strong>
+  </span>
+  <span class="summary__title" aria-hidden="true">{{ title() }}</span>
+  <span class="summary__xp" aria-hidden="true">{{ xp() }} XP</span>
+  <span class="tube" aria-hidden="true">
+    <span class="tube__fill" [style.width.%]="percent()"></span>
+  </span>
+</div>

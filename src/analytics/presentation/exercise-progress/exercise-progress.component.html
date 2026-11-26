@@ -1,0 +1,99 @@
+@if (summary().compared > 0) {
+  <p class="headline">
+    <strong class="headline__number"
+      >{{ summary().improved }} {{ t().of }} {{ summary().compared }}</strong
+    >
+    {{ t().beatBefore }}
+    @if (summary().streak > 1) {
+      <span class="headline__streak">· {{ t().inARow(summary().streak) }}</span>
+    }
+  </p>
+}
+
+@if (stalledFor(); as count) {
+  <div class="stall">
+    <p class="stall__line">{{ t().stalled(count) }}</p>
+    <p class="stall__advice">{{ t().stalledAdvice }}</p>
+  </div>
+}
+
+<svg class="chart" [attr.viewBox]="viewBox" role="img" [attr.aria-label]="description()">
+  <text class="axis-label" x="0" [attr.y]="layout.loadLabelY">{{ t().heaviestLoad }}</text>
+  <text class="axis-label" x="0" [attr.y]="layout.repsLabelY">{{ t().totalReps }}</text>
+
+  <!-- Highlight behind the selected session. -->
+  @if (selected(); as point) {
+    <rect
+      class="highlight"
+      y="0"
+      rx="4"
+      [attr.x]="point.x - 11"
+      [attr.height]="layout.height"
+      width="22"
+    />
+  }
+
+  <line
+    class="baseline"
+    x1="0"
+    [attr.x2]="layout.width"
+    [attr.y1]="layout.repsBottom"
+    [attr.y2]="layout.repsBottom"
+  />
+
+  <path class="line" [attr.d]="loadLine()" />
+  @for (point of points(); track point.startedAt) {
+    <path class="bar" [attr.d]="point.bar" />
+    <circle class="dot" r="4" [attr.cx]="point.x" [attr.cy]="point.loadY" />
+    @if (point.isEndpoint || point === selected()) {
+      <text
+        class="value"
+        [attr.text-anchor]="point.labelAnchor"
+        [attr.x]="point.labelX"
+        [attr.y]="point.loadY - point.loadLabelGap"
+      >
+        {{ point.load }}
+      </text>
+      <text class="value" text-anchor="middle" [attr.x]="point.x" [attr.y]="point.repsLabelY">
+        {{ point.reps }}
+      </text>
+    }
+    <text
+      class="verdict"
+      [class]="'verdict verdict--' + point.verdict"
+      text-anchor="middle"
+      [attr.x]="point.x"
+      [attr.y]="layout.verdictY"
+    >
+      {{ point.glyph }}
+    </text>
+  }
+
+  <!-- Invisible columns on top of everything: tapping or hovering one selects that session. -->
+  @for (point of points(); track point.startedAt; let index = $index) {
+    <rect
+      class="hit"
+      y="0"
+      [attr.x]="point.hitX"
+      [attr.width]="point.hitWidth"
+      [attr.height]="layout.height"
+      (pointerenter)="selectedIndex.set(index)"
+      (click)="selectedIndex.set(index)"
+    />
+  }
+</svg>
+
+<p class="caption">{{ t().caption }}</p>
+
+@if (selected(); as point) {
+  <div class="detail" aria-live="polite">
+    <p class="detail__line">
+      <span class="detail__date">{{ point.startedAt | localDate: 'EEE d MMM' }}</span>
+      <strong class="detail__value">{{ point.reps }} {{ t().reps }}</strong>
+      <span class="detail__verdict" [class]="'detail__verdict verdict--' + point.verdict">
+        {{ point.glyph }} {{ point.verdictLabel }}
+      </span>
+    </p>
+    <olab-set-grid [sets]="point.sets" [compact]="true" />
+  </div>
+}

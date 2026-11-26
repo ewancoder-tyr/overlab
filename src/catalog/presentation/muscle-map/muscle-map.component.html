@@ -1,0 +1,20 @@
+<svg class="map" viewBox="14 2 172 196" role="img" [attr.aria-label]="description()">
+  @for (shape of shapes(); track $index) {
+    <path
+      class="shape"
+      [class.shape--active]="shape.active"
+      [attr.d]="shape.path"
+      [attr.fill-opacity]="shape.opacity"
+    />
+  }
+</svg>
+
+<ul class="legend">
+  @for (entry of legend(); track entry.name) {
+    <li class="legend__item">
+      <span class="legend__swatch" [style.opacity]="entry.opacity" aria-hidden="true"></span>
+      <span class="legend__name">{{ entry.name }}</span>
+      <span class="legend__value">{{ entry.ratio | percent: undefined : language() }}</span>
+    </li>
+  }
+</ul>

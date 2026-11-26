@@ -1,0 +1,105 @@
+@if (reminder(); as reminder) {
+  <label class="field">
+    <span class="field__label">{{ t().remindAt }}</span>
+    <input
+      #time
+      class="input time"
+      type="time"
+      [value]="reminder.time"
+      (change)="setTime(time.value)"
+    />
+  </label>
+
+  <div class="choice" role="group" [attr.aria-label]="t().howPlanned">
+    <button
+      type="button"
+      class="choice__option"
+      [class.choice__option--on]="reminder.schedule.kind === 'weekdays'"
+      [attr.aria-pressed]="reminder.schedule.kind === 'weekdays'"
+      (click)="chooseWeekdays()"
+    >
+      {{ t().daysOfWeek }}
+    </button>
+    <button
+      type="button"
+      class="choice__option"
+      [class.choice__option--on]="reminder.schedule.kind === 'interval'"
+      [attr.aria-pressed]="reminder.schedule.kind === 'interval'"
+      (click)="chooseInterval()"
+    >
+      {{ t().everyFewDays }}
+    </button>
+  </div>
+
+  @if (reminder.schedule.kind === 'weekdays') {
+    <div class="days" role="group" [attr.aria-label]="t().daysOfWeek">
+      @for (day of weekdays(); track day.id) {
+        <button
+          type="button"
+          class="day"
+          [class.day--on]="day.on"
+          [attr.aria-pressed]="day.on"
+          [attr.aria-label]="day.name"
+          (click)="toggleDay(day.id)"
+        >
+          {{ day.short }}
+        </button>
+      }
+    </div>
+  } @else {
+    <olab-stepper
+      [label]="t().every"
+      [unit]="t().days(reminder.schedule.everyDays)"
+      [min]="1"
+      [value]="reminder.schedule.everyDays"
+      (valueChange)="setEveryDays($event)"
+    />
+    <p class="muted">
+      {{ t().countedFrom }} {{ reminder.schedule.startDate | localDate: 'EEE d MMM'
+      }}{{ t().restart }}
+    </p>
+    <div class="choice" role="group" [attr.aria-label]="t().nextReminder">
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="nextOffset() === 0"
+        [attr.aria-pressed]="nextOffset() === 0"
+        (click)="startCycle(0)"
+      >
+        {{ t().today }}
+      </button>
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="nextOffset() === 1"
+        [attr.aria-pressed]="nextOffset() === 1"
+        (click)="startCycle(1)"
+      >
+        {{ t().tomorrow }}
+      </button>
+    </div>
+    <div>
+      <span class="eyebrow">{{ t().nextDays }}</span>
+      <ul class="upcoming">
+        @for (day of upcoming(); track day) {
+          <li class="upcoming__day">{{ day | localDate: 'EEE d MMM' }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="actions">
+    <button type="button" class="button button--ghost" (click)="remove()">
+      {{ t().remove }}
+    </button>
+  </div>
+} @else {
+  <p class="muted">{{ t().none }}</p>
+  <div class="actions">
+    <button type="button" class="button button--primary" (click)="add()">{{ t().add }}</button>
+  </div>
+}
+
+@if (error(); as message) {
+  <p class="error" role="alert">{{ message | localize }}</p>
+}

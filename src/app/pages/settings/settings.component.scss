@@ -1,0 +1,249 @@
+/* The pill choice, the weekday chips, the upcoming days and the time field. */
+@use '../../../settings/presentation/schedule-controls';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.muted,
+.error {
+  margin: 0;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Solo reminders: a group of its own inside the Reminders card. */
+.solo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+.solo__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.solo__item {
+  display: flex;
+  flex-direction: column;
+  /* An outline, not a raised fill: the day chips inside the editor are raised themselves. */
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+/* The whole row is the button: the name on the left, its days and time on the right. */
+.solo__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.solo__name {
+  font-weight: 600;
+}
+
+.solo__summary {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.solo__editor {
+  padding: 0.25rem 0.875rem 0.875rem;
+}
+
+.on {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.on__dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The Advanced disclosure: a card whose heading is the toggle. */
+.advanced {
+  gap: 0;
+}
+
+.advanced__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+  list-style: none;
+
+  /* Safari draws its own marker unless told not to. */
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  h2 {
+    margin: 0;
+  }
+
+  /* A chevron that points down when open. */
+  &::after {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: auto;
+    border-right: 2px solid var(--text-muted);
+    border-bottom: 2px solid var(--text-muted);
+    transform: rotate(-45deg);
+    transition: transform 0.15s;
+  }
+}
+
+.advanced[open] .advanced__summary::after {
+  transform: rotate(45deg);
+}
+
+.advanced__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 0.875rem;
+}
+
+/* A group of settings under a small specimen-style heading. */
+.tune-group {
+  display: flex;
+  flex-direction: column;
+
+  h3 {
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/*
+ * One setting: the name and the compact stepper on one line, the hint under both. A grid, so the
+ * name takes what the stepper leaves and wraps on a narrow phone instead of squeezing it.
+ */
+.tune {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.tune__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.tune__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* The training focus: three options stacked, each a full-width 44 px pill. */
+.focus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.focus__legend {
+  /* A legend does not take part in the fieldset's flex layout; `float` makes it a normal block. */
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.focus__legend h2 {
+  margin: 0;
+}
+
+.choice--stack {
+  grid-template-columns: 1fr;
+  border-radius: 1.5rem;
+}
+
+label.choice__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The radio is visually hidden, so its keyboard focus is drawn on the pill around it. */
+label.choice__option:has(input:focus-visible) {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* The About heading's hidden button looks like the plain heading it stands in. */
+.about__title {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: default;
+  touch-action: manipulation;
+}

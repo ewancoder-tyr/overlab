@@ -1,0 +1,59 @@
+:host {
+  --row: 2.5rem;
+
+  position: relative;
+  display: block;
+  /* Three rows: the value and one neighbour on each side. */
+  height: calc(var(--row) * 3);
+  border-radius: 1.125rem;
+  background: var(--surface-raised);
+  overflow: hidden;
+
+  /* The band behind the middle row: where the value is read. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: var(--row) 0.25rem;
+    border-radius: 0.75rem;
+    background: var(--accent-soft);
+    pointer-events: none;
+  }
+}
+
+.wheel {
+  position: relative;
+  height: 100%;
+  /* A row of room above the first value and below the last, so both can reach the middle. */
+  padding: var(--row) 0;
+  overflow-y: auto;
+  /* The settling: the browser always stops with a row exactly in the middle. */
+  scroll-snap-type: y mandatory;
+  /* Scrolling to the end must not start scrolling the page behind. */
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.wheel__row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--row);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  scroll-snap-align: center;
+  opacity: 0.6;
+}
+
+.wheel__row--picked {
+  color: var(--accent-ink);
+  font-size: 1.625rem;
+  font-weight: 700;
+  opacity: 1;
+}

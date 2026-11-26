@@ -1,0 +1,47 @@
+<!-- The inside of a set, shared by the tappable and the read-only variant below. -->
+<ng-template #content let-cell>
+  @for (tile of cell.tiles; track $index) {
+    <span class="tile" [class]="'tile tile--' + tile.technique">{{ tile.reps }}</span>
+  }
+  @if (cell.failure) {
+    <i class="set__failure"></i>
+  } @else if (cell.light) {
+    <i class="set__failure set__failure--light"></i>
+  } @else if (cell.easy) {
+    <i class="set__failure set__failure--easy"></i>
+  }
+</ng-template>
+
+@for (row of rows(); track row.load) {
+  <div class="row">
+    <span class="load">{{ row.load }}</span>
+    <span class="sets">
+      @for (cell of row.cells; track cell.id) {
+        @if (interactive()) {
+          <button
+            type="button"
+            class="set"
+            [class]="'set set--' + (cell.tone ?? 'none')"
+            [class.set--warm-up]="cell.warmUp"
+            [class.set--selected]="cell.id === selectedId()"
+            [attr.aria-label]="cell.label"
+            [attr.aria-pressed]="cell.id === selectedId()"
+            (click)="selected.emit(cell.id)"
+          >
+            <ng-container *ngTemplateOutlet="content; context: { $implicit: cell }" />
+          </button>
+        } @else {
+          <span
+            class="set"
+            role="img"
+            [class]="'set set--' + (cell.tone ?? 'none')"
+            [class.set--warm-up]="cell.warmUp"
+            [attr.aria-label]="cell.label"
+          >
+            <ng-container *ngTemplateOutlet="content; context: { $implicit: cell }" />
+          </span>
+        }
+      }
+    </span>
+  </div>
+}

@@ -1,0 +1,14 @@
+<!--
+  The kettlebell of the big rest clock, drawn behind the text. Every stopwatch has it, but only
+  the big one shows it (`.stopwatch--big` in the styles): the stopwatch does not know which kind
+  it is, its host class says so. `evenodd` makes the handle's window a hole.
+-->
+<svg class="stopwatch__shape" viewBox="0 0 140 120" preserveAspectRatio="none" aria-hidden="true">
+  <path
+    fill-rule="evenodd"
+    d="M34 46C24 -6 116 -6 106 46C128 52 138 76 135 97C133 110 125 117 116 117H24C15 117 7 110 5 97C2 76 12 52 34 46ZM50 45C43 13 97 13 90 45Q70 40 50 45Z"
+  />
+</svg>
+<span class="stopwatch__label" aria-hidden="true">{{ label() }}</span>
+<!-- Not announced every second: `role="timer"` is not live by default, and this says so. -->
+<span class="stopwatch__digits" aria-hidden="true" aria-live="off">{{ text() }}</span>

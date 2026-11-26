@@ -1,0 +1,166 @@
+@if (exercise(); as exercise) {
+  <!--
+    The exercise's drawing as a faint backdrop. Decorative only: the empty alt and aria-hidden keep
+    it away from screen readers, and an exercise without a drawing just has no backdrop.
+  -->
+  @if (!backdropMissing()) {
+    <img
+      class="backdrop"
+      [src]="'exercise-drawings/' + exercise.id + '-2.svg'"
+      alt=""
+      aria-hidden="true"
+      decoding="async"
+      (error)="backdropFailed()"
+    />
+  }
+
+  <header class="bar">
+    <a class="icon-button" routerLink="/exercises" [attr.aria-label]="t().back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </a>
+    <h1 class="bar__title">{{ exercise.name | localize }}</h1>
+    <!--
+      Workout time. A fixed-size slot, present even before the first set, so the title never
+      shifts when a set is logged. Not for cardio, which has no rest between sets.
+
+      While solo sets are being logged the slot holds the bell of the exercise's solo reminder
+      instead: a solo set touches no workout, so its time says nothing here. The bell is lit
+      when a reminder is set. `showModal()` is the browser's own dialog: it traps focus and
+      closes on Escape or back.
+    -->
+    @if (!cardio()) {
+      @if (standalone()) {
+        <div class="bar__time bar__time--bell">
+          <button
+            type="button"
+            class="icon-button"
+            [class.icon-button--lit]="hasSoloReminder()"
+            [attr.aria-label]="t().soloReminder"
+            [attr.aria-pressed]="hasSoloReminder()"
+            (click)="reminderDialog.showModal()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" />
+            </svg>
+          </button>
+        </div>
+      } @else {
+        <olab-workout-time class="bar__time" [inline]="true" />
+      }
+    }
+    <a
+      class="icon-button"
+      [routerLink]="['/exercises', exercise.id, 'stats']"
+      [attr.aria-label]="t().stats"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6" /></svg>
+    </a>
+  </header>
+  @if (inThePast()) {
+    <p class="past-note" role="status">
+      {{ t().inThePast }} {{ now() | localDate: 'EEE d MMM, HH:mm' }}
+    </p>
+  }
+
+  <dialog #reminderDialog class="reminder-dialog" aria-labelledby="reminder-dialog-title">
+    <span class="eyebrow">{{ t().soloReminder }}</span>
+    <h2 id="reminder-dialog-title">{{ exercise.name | localize }}</h2>
+    <olab-solo-reminder-editor [exerciseId]="exercise.id" />
+    @if (hasSoloReminder() && !remindersOn()) {
+      <p class="muted">
+        {{ t().remindersOff }}
+        <a routerLink="/settings">{{ t().openSettings }}</a>
+      </p>
+    }
+    <button type="button" class="button button--primary" (click)="reminderDialog.close()">
+      {{ t().done }}
+    </button>
+  </dialog>
+
+  @if (cardio()) {
+    <!-- Cardio is logged as distance, time and calories: other zones, same screen. -->
+    <olab-cardio-log [exercise]="exercise" />
+  } @else {
+    <!--
+    The middle zone: last session against today's. Only the part under the rest clock scrolls,
+    when it does not fit; older sessions live on the statistics page, one tap away in the title bar.
+  -->
+    <section class="log-compare" [attr.aria-label]="t().lastAndToday">
+      <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+      <!--
+        Rest, big, at the top of the zone above the comparison. Hidden for a cardio-only focus,
+        with an empty spacer in its place so the feed starts where it always does.
+      -->
+      @if (showsRest()) {
+        <olab-rest-clock class="log-rest" />
+      } @else {
+        <div class="log-rest" aria-hidden="true"></div>
+      }
+      <!--
+        Everything under the clock. Pinned to the bottom; when it outgrows its room, it scrolls,
+        its top fading out under the clock. The inner box is for the scrolling (see the styles).
+      -->
+      <div class="log-feed">
+        <div class="log-feed__content">
+          <olab-session-compare
+            [exercise]="exercise"
+            [pace]="pace()"
+            [warmUps]="warmUps()"
+            [tones]="tones()"
+            [records]="records()"
+            [selectedId]="selectedId()"
+            (selected)="select($event)"
+          />
+
+          @if (legend().length > 0) {
+            <ul class="legend" [attr.aria-label]="t().techniqueColours">
+              @for (technique of legend(); track technique.id) {
+                <li class="legend__item">
+                  <span
+                    class="tile-swatch"
+                    [class]="'tile-swatch tile-swatch--' + technique.id"
+                  ></span>
+                  {{ technique.name | localize }}
+                </li>
+              }
+            </ul>
+          }
+
+          @if (selectedSet(); as set) {
+            <div class="selection">
+              <div class="selection__summary">
+                <olab-set-summary [set]="set" />
+                @if (selectedRecord(); as record) {
+                  <span class="eyebrow eyebrow--accent">{{ record }}</span>
+                }
+              </div>
+              <button
+                type="button"
+                class="button button--small button--danger"
+                (click)="voidSelected()"
+              >
+                {{ voidArmed() ? t().confirm : t().void }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="log-entry" [attr.aria-label]="t().logSet">
+      <div class="hazard" aria-hidden="true"></div>
+      <olab-quick-set-form
+        [exercise]="exercise"
+        [prefill]="prefill()"
+        [error]="error()"
+        [(standalone)]="standalone"
+        (logged)="log($event)"
+      />
+    </section>
+  }
+} @else {
+  <section class="card missing">
+    <h2>{{ t().unknown }}</h2>
+    <a class="button" routerLink="/exercises">{{ t().choose }}</a>
+  </section>
+}

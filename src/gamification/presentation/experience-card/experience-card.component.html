@@ -1,0 +1,27 @@
+<!-- The level, title and bar are the summary at the top of the page; these are the details. -->
+<p class="next">
+  <span class="muted">{{ toNext() }}</span>
+  <a class="next__history" routerLink="/experience">{{ t().history }}</a>
+</p>
+
+@if (empty()) {
+  <p class="muted">{{ t().empty }}</p>
+} @else {
+  <details class="exercises">
+    <summary class="exercises__toggle">{{ t().exercises(exercises().length) }}</summary>
+    <ul class="exercises__list">
+      @for (exercise of exercises(); track exercise.id) {
+        <li>
+          <a class="row" [routerLink]="['/exercises', exercise.id, 'stats']">
+            <span class="row__level">{{ t().lv }} {{ exercise.level }}</span>
+            <span class="row__name">{{ exercise.name }}</span>
+            <span class="row__xp">{{ exercise.xp }} XP</span>
+            <span class="row__bar" aria-hidden="true">
+              <span class="row__fill" [style.width.%]="exercise.percent"></span>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  </details>
+}

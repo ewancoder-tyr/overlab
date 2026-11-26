@@ -1,0 +1,23 @@
+<section aria-labelledby="diagnostics-heading">
+  <h3 id="diagnostics-heading">{{ t().heading }}</h3>
+  <p class="muted">{{ t().intro }}</p>
+  <div class="actions">
+    <button type="button" class="button" [attr.aria-pressed]="enabled()" (click)="toggle()">
+      {{ enabled() ? t().turnOff : t().turnOn }}
+    </button>
+    @if (lines().length > 0) {
+      <button type="button" class="button button--primary" (click)="copy()">
+        {{ t().copy }}
+      </button>
+      <button type="button" class="button" (click)="clear()">{{ t().clear }}</button>
+    }
+  </div>
+  @if (copied()) {
+    <p role="status">{{ t().copied }}</p>
+  }
+  @if (lines().length > 0) {
+    <pre class="trace">{{ lines().join('\n') }}</pre>
+  } @else if (enabled()) {
+    <p class="muted">{{ t().empty }}</p>
+  }
+</section>

@@ -1,0 +1,115 @@
+@if (board(); as board) {
+  @let current = connection();
+  @if (current === 'offline' || current === 'failed' || current === 'expired') {
+    <p class="stale" role="status">
+      @switch (current) {
+        @case ('offline') {
+          {{ t().offline }}
+        }
+        @case ('failed') {
+          {{ t().failed }}
+        }
+        @case ('expired') {
+          {{ t().expired }}
+        }
+      }
+      {{ board.fetchedAt | localDate: 'd MMM, HH:mm' }}.
+    </p>
+  }
+
+  @if (rows().length > 1) {
+    <p class="muted buddies">{{ t().buddies }}</p>
+  }
+  @switch (hint()) {
+    @case ('off') {
+      <p class="notice" role="status">
+        {{ t().offHere }}
+        <button type="button" class="button" [disabled]="busy() !== undefined" (click)="turnOn()">
+          {{ t().turnOn }}
+        </button>
+      </p>
+    }
+    @case ('blocked') {
+      <p class="notice" role="status">{{ t().blockedHere }}</p>
+    }
+    @case ('unsupported') {
+      <p class="notice" role="status">{{ t().unsupportedHere }}</p>
+    }
+  }
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message | localize }}</p>
+  }
+
+  <ol class="board">
+    @for (row of rows(); track $index) {
+      <!-- The row reads as one sentence; its parts are drawn for the eye. -->
+      <li class="row" [class.row--you]="row.you" [attr.aria-label]="row.label">
+        <span class="row__place" aria-hidden="true">{{ row.place }}</span>
+        @if (row.showsPicture) {
+          <!--
+            Google's image server refuses some requests that say which page they came from, and
+            the viewer's page is nobody's business: no referrer.
+          -->
+          <img
+            class="row__picture"
+            [src]="row.picture"
+            alt=""
+            width="44"
+            height="44"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            (error)="pictureFailed(row.picture)"
+          />
+        } @else {
+          <span class="row__picture row__picture--initial" aria-hidden="true">{{
+            row.initial
+          }}</span>
+        }
+        <span class="row__who" aria-hidden="true">
+          <span class="row__name">
+            {{ row.name }}
+            @if (row.you) {
+              <span class="row__you">{{ t().you }}</span>
+            }
+          </span>
+          <span class="row__title">{{ row.titleText }}</span>
+        </span>
+        <span class="row__score" aria-hidden="true">
+          <span class="row__level">{{ t().lv }} {{ row.level }}</span>
+          <span class="row__xp">{{ row.xpText }} XP</span>
+        </span>
+        <!--
+          The bell says only whether YOU follow this row. Whether they follow back is never
+          shown, here or anywhere: you find out when their sets start arriving.
+        -->
+        @if (!row.you) {
+          <button
+            type="button"
+            class="row__bell"
+            [class.row__bell--on]="row.following"
+            [attr.aria-pressed]="row.following"
+            [attr.aria-label]="row.bellLabel"
+            [disabled]="busy() !== undefined"
+            (click)="toggle(row)"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                d="M12 3a6 6 0 0 0-6 6v3.6L4.3 16a1 1 0 0 0 .9 1.5h13.6a1 1 0 0 0 .9-1.5L18 12.6V9a6 6 0 0 0-6-6Z"
+              />
+              <path class="row__clapper" d="M9.5 19.5a2.5 2.5 0 0 0 5 0" />
+            </svg>
+          </button>
+        }
+      </li>
+    }
+  </ol>
+
+  @if (alone()) {
+    <p class="muted">{{ t().alone }}</p>
+  }
+} @else if (joined() || connection() === 'loading') {
+  <p class="muted" role="status">{{ t().loading }}</p>
+} @else {
+  <p class="muted">{{ t().notJoined }}</p>
+  <a class="button" routerLink="/settings" replaceUrl>{{ t().settings }}</a>
+}

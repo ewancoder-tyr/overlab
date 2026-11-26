@@ -1,0 +1,76 @@
+<section class="card" aria-labelledby="catalog-heading">
+  <h2 id="catalog-heading">{{ t().heading }}</h2>
+  <p class="muted">{{ t().intro }}</p>
+  <label class="field">
+    <span class="field__label">{{ t().search }}</span>
+    <input
+      #search
+      class="input"
+      type="search"
+      autocomplete="off"
+      [value]="query()"
+      (input)="query.set(search.value)"
+    />
+  </label>
+
+  @if (showsMuscles()) {
+    <div class="filters" role="group" [attr.aria-label]="t().filter">
+      @for (muscle of muscles(); track muscle.id) {
+        <button
+          type="button"
+          class="filter"
+          [class.filter--on]="muscleFilter() === muscle.id"
+          [attr.aria-pressed]="muscleFilter() === muscle.id"
+          (click)="toggleMuscle(muscle.id)"
+        >
+          {{ muscle.name }}
+          @if (muscle.behind) {
+            <span class="filter__dot" aria-hidden="true"></span>
+            <span class="visually-hidden">{{ t().underTargetHidden }}</span>
+          }
+        </button>
+      }
+    </div>
+    <p class="muted"><span class="filter__dot" aria-hidden="true"></span> {{ t().underTarget }}</p>
+  }
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message | localize }}</p>
+  }
+</section>
+
+@for (section of sections(); track section.title) {
+  <section class="card">
+    <h3>{{ section.title }}</h3>
+    <ul class="plain-list">
+      @for (item of section.items; track item.exercise.id) {
+        <li class="entry">
+          <a class="list-link entry__main" [routerLink]="['/exercises', item.exercise.id]">
+            <olab-exercise-figure [exercise]="item.exercise" [thumbnail]="true" />
+            <span class="item">
+              <span>{{ item.exercise.name | localize }}</span>
+              <span class="muted">{{ item.detail }}</span>
+            </span>
+          </a>
+          <!-- A toggle button: `aria-pressed` tells a screen reader whether the star is on. -->
+          <button
+            type="button"
+            class="entry__star"
+            [class.entry__star--on]="item.favorite"
+            [attr.aria-pressed]="item.favorite"
+            [attr.aria-label]="t().favorite(item.exercise.name | localize)"
+            (click)="toggleFavorite(item)"
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path
+                d="M12 3.2l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17.1 6.6 20l1.1-6.1L3.2 9.6l6.1-.8z"
+              />
+            </svg>
+          </button>
+        </li>
+      } @empty {
+        <li class="muted">{{ t().nothing }}</li>
+      }
+    </ul>
+  </section>
+}

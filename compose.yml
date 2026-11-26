@@ -1,0 +1,57 @@
+# The production deployment: the static site, plus the small Go service behind it.
+#
+# The images are built and pushed by .github/workflows/deploy.yml, which then has the server
+# check this repository out and run this file with TAG set to the image tag of the commit.
+
+networks:
+  # The reverse proxy's network. It terminates HTTPS and reaches the site as http://overlab:80;
+  # no port is published on the host. Created and owned elsewhere; compose only joins it.
+  default:
+    name: typingrealm
+    external: true
+  # Private to this project: where the site finds the service, and the service's way out to the
+  # internet (the push services, Google's signing keys).
+  egress:
+
+services:
+  overlab:
+    image: ghcr.io/ewancoder-tyr/overlab-web:${TAG:?}
+    build: .
+    container_name: overlab
+    restart: unless-stopped
+    depends_on:
+      - reminders
+    volumes:
+      # Optional: files this installation serves beside the app as /extras/ (see
+      # src/app/extras.ts). An empty folder means none.
+      - /data/tyr/prod/overlab/extras:/usr/share/nginx/html/extras:ro
+    networks:
+      - default
+      - egress
+
+  # Sends the notifications and keeps the cloud copies (see reminder-server/main.go). Reached
+  # only through the site's container, which forwards /api/reminders/ and /api/sync/ to it; it
+  # is not on the proxy's network.
+  reminders:
+    image: ghcr.io/ewancoder-tyr/overlab-reminders:${TAG:?}
+    build:
+      context: reminder-server
+      # The release notes are baked into the image: the service announces their newest version.
+      additional_contexts:
+        notes: src/app
+    container_name: overlab-reminders
+    restart: unless-stopped
+    environment:
+      # A contact URL sent to the push services with every notification.
+      VAPID_SUBJECT: https://overlab.typingrealm.org
+      # OverLab's Google OAuth client id (public). Turns cloud sync and the leaderboard on;
+      # remove it to turn them off. The same id is in
+      # src/sync/infrastructure/google-identity-sign-in.ts.
+      GOOGLE_CLIENT_ID: 400839590162-24pngke3ov8rbi2f3forabpaufaosldg.apps.googleusercontent.com
+    volumes:
+      # The signing keys, the registered devices, and the cloud copies of signed-in users' logs
+      # (sync.db). Losing it loses those cloud copies: back it up. Owned by the container's
+      # user, uid 10001.
+      - /data/tyr/prod/overlab/data:/data
+    networks:
+      - egress

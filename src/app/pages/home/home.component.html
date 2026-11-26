@@ -1,0 +1,66 @@
+<!--
+  The character at a glance stays first but slim, so the volume gauges under it are on screen as
+  they fill; the details (history, exercises, leaderboard) are the last card.
+-->
+<!-- Everything that was logged, day by day: a page of its own, one tap from the top of Week. -->
+<a
+  class="history"
+  routerLink="/history"
+  [attr.aria-label]="t().historyLabel"
+  (click)="freshHistory()"
+>
+  {{ t().history }}
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+</a>
+
+@if (showsExperience()) {
+  <section class="card card--slim" [attr.aria-label]="t().experience">
+    <olab-experience-summary />
+  </section>
+}
+
+<!-- Each section only when the training focus includes it; with cardio only, cardio is first. -->
+@if (showsLifting()) {
+  <section class="card" aria-labelledby="volume-heading">
+    <span class="eyebrow">{{ window() }}</span>
+    <h2 id="volume-heading">{{ t().weeklyVolume }}</h2>
+    <olab-weekly-volume />
+  </section>
+}
+
+@if (showsCardio()) {
+  <section class="card" aria-labelledby="cardio-heading">
+    <span class="eyebrow">{{ window() }}</span>
+    <h2 id="cardio-heading">{{ t().cardio }}</h2>
+    <olab-weekly-cardio />
+  </section>
+}
+
+<section class="card" aria-labelledby="workout-heading">
+  <span class="eyebrow">{{ t().inProgress }}</span>
+  <h2 id="workout-heading">{{ t().currentWorkout }}</h2>
+  @if (workout(); as exercises) {
+    <ul class="plain-list">
+      @for (exercise of exercises; track exercise.exerciseId) {
+        <li>
+          <a class="workout-item" [routerLink]="['/exercises', exercise.exerciseId]">
+            <span class="workout-item__name">{{ exercise.name }}</span>
+            <olab-set-grid [sets]="exercise.sets" [compact]="true" />
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="muted">{{ t().quiet }}</p>
+  }
+  <!-- Leads to another tab, so it replaces the address like the tab bar does (app.component.html). -->
+  <a class="button button--primary" routerLink="/exercises" replaceUrl>{{ t().train }}</a>
+</section>
+
+@if (showsExperience()) {
+  <section class="card" aria-labelledby="experience-heading">
+    <h2 id="experience-heading">{{ t().experience }}</h2>
+    <olab-experience-card />
+    <olab-leaderboard-place />
+  </section>
+}

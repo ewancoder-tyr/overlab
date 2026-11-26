@@ -1,0 +1,82 @@
+/*
+ * The controls a schedule is edited with: the two-option pill, the seven weekday chips, the list
+ * of upcoming days and the time field. Shared by the Settings page (gym days) and the solo
+ * reminder editor, which ask the same questions. Angular scopes styles to one component, so each
+ * of them pulls this file in with `@use`.
+ */
+
+/* Two options side by side that read as one control: pick one. */
+.choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--background);
+}
+
+.choice__option,
+.day {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.choice__option--on,
+.day--on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Seven equal chips in one row, Monday first. */
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.day {
+  border-radius: 0.75rem;
+  background: var(--surface-raised);
+  font-size: 0.9375rem;
+  letter-spacing: 0;
+}
+
+.day--on {
+  background: var(--accent);
+}
+
+.upcoming {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upcoming__day {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  background: var(--surface-raised);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* The time field does not need the full width of the card. */
+.time {
+  max-width: 9rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+}

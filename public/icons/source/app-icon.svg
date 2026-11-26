@@ -1,0 +1,6 @@
+<!-- App icon: the dumbbell from the log button, on a full-bleed black square. The artwork stays
+     inside the central 80% so that launchers can mask the square to a circle or a squircle. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="rotate(-45 256 256)" fill="#ffd400"><rect x="136" y="228" width="240" height="56" rx="6"/><rect x="116" y="156" width="52" height="200" rx="14"/><rect x="344" y="156" width="52" height="200" rx="14"/><rect x="68" y="188" width="40" height="136" rx="12"/><rect x="404" y="188" width="40" height="136" rx="12"/></g>
+</svg>

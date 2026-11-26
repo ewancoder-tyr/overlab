@@ -1,0 +1,167 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/*
+ * One measure per row: its name, the field, its unit. The same three columns on every row.
+ * The name column fits the longest label in either language ("ДИСТАНЦИЯ").
+ */
+.row {
+  display: grid;
+  grid-template-columns: 6rem 1fr 4rem;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/*
+ * A treadmill: the fields on the left, the incline on the right. The fields give up their unit
+ * column to make room, and each unit moves under its label instead.
+ */
+.form--treadmill {
+  display: grid;
+  grid-template-columns: 1fr 5.25rem;
+  gap: 0.5rem;
+
+  .row {
+    grid-template-columns: 4.75rem 1fr;
+  }
+
+  .row__unit {
+    display: none;
+  }
+
+  .row__label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+
+  .row__inline-unit {
+    display: block;
+  }
+}
+
+/* The unit under the label: only on a treadmill, see above. */
+.row__inline-unit {
+  display: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+/*
+ * The incline: its switch on top, the wheel under it. Together they are as tall as the three
+ * fields (3 x 3.25rem and two gaps of 0.5rem), so the wheel's rows are a third of what is left.
+ */
+.incline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.incline__switch {
+  flex: none;
+  height: 2.75rem;
+  padding: 0;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.incline__wheel {
+  --row: 2.5rem;
+}
+
+/* Flat: the switch is an empty outline and the wheel steps back, still there to be turned. */
+.incline--off {
+  .incline__switch {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  .incline__wheel {
+    opacity: 0.45;
+  }
+}
+
+.row__label,
+.row__unit {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.time {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.time__colon {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.number {
+  width: 100%;
+  min-width: 0;
+  height: 3.25rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 1.125rem;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-family: var(--font-display);
+  /* Well above 16px, below which mobile browsers zoom in on a focused field. */
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+
+  /* Last time's number: visible enough to read, clearly not something you typed. */
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.45;
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+  text-align: center;
+}

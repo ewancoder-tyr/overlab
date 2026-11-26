@@ -1,0 +1,50 @@
+@if (empty()) {
+  <section class="card">
+    <p class="muted">{{ t().empty }}</p>
+  </section>
+}
+
+@for (workout of workouts(); track workout.startedAt) {
+  <section class="card workout" [attr.aria-labelledby]="'xp-' + workout.startedAt">
+    <header class="workout__head">
+      <h3 class="workout__date" [id]="'xp-' + workout.startedAt">
+        {{ workout.startedAt | localDate: 'EEE d MMM y' }}
+        <span class="workout__time">{{ workout.startedAt | localDate: 'HH:mm' }}</span>
+      </h3>
+      <strong class="workout__xp">+{{ workout.xp }} XP</strong>
+    </header>
+    @if (workout.levelUp; as levelUp) {
+      <p class="workout__level">{{ levelUp }}</p>
+    }
+
+    <ul class="exercises">
+      @for (exercise of workout.exercises; track exercise.id) {
+        <li class="exercise">
+          <div class="exercise__head">
+            <span class="exercise__name">{{ exercise.name }}</span>
+            <span class="exercise__level" [class.exercise__level--up]="exercise.leveled">
+              {{ exercise.level }}
+            </span>
+            <span class="exercise__xp">+{{ exercise.xp }}</span>
+          </div>
+          <ul class="reasons">
+            @for (reason of exercise.reasons; track reason.reason) {
+              <li
+                class="reason"
+                [class.reason--weight]="reason.reason === 'weight-record'"
+                [class.reason--reps]="reason.reason === 'rep-record'"
+              >
+                <span>{{ reason.name }}</span>
+                <span class="reason__xp">+{{ reason.xp }}</span>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+@if (hasMore()) {
+  <button type="button" class="button more" (click)="showMore()">{{ t().more }}</button>
+}

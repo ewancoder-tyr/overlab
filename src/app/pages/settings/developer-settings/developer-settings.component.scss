@@ -1,0 +1,34 @@
+/* One card, its tools in parts under their own headings, split by hazard stripes. */
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.muted,
+.warning,
+.error,
+p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* A date needs far less room than the full-width field it sits in. */
+.date {
+  max-width: 12rem;
+}

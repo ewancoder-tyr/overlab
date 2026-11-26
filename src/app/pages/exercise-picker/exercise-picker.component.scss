@@ -1,0 +1,95 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Two small pills side by side. The big rest clock is for the logging screen only. */
+.clocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+h2,
+.muted {
+  margin: 0;
+}
+
+.item {
+  /* Takes the room between the drawing and the badge, so names line up in a column. */
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A row: the exercise (opens logging) and, beside it, a button that opens its statistics. */
+.entry {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry__main {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.entry__stats {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  align-items: center;
+  width: 3rem;
+  color: var(--text-muted);
+}
+
+/*
+ * Done today: the name takes the done colour (green) and so does the drawing (see the exercise
+ * figure). Colour is not the only signal: the badge with the number of sets says the same in text.
+ */
+.entry--done .item__name {
+  color: var(--done);
+}
+
+/*
+ * The current exercise, the one of the latest set: a yellow bar on its left edge and a faint
+ * yellow wash, so it is spotted at a glance on the way back to it. Yellow because it is something
+ * to act on (go back in); its name keeps its own colour, green once done. Screen readers hear
+ * "Current exercise" before the name.
+ */
+.entry--current {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent-ink);
+}
+
+.badge--done {
+  background: var(--done);
+}
+
+.badge--next {
+  background: var(--accent);
+}
+
+/* One line, always: the muscles give way to the stalled tag instead of wrapping. */
+.item__detail {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.item__muscles {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stalled {
+  flex: none;
+  color: var(--warning);
+  font-size: 0.75rem;
+  line-height: 1;
+}

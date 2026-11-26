@@ -1,0 +1,115 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.workout__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.workout__date {
+  margin: 0;
+}
+
+.workout__time {
+  margin-left: 0.375rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.workout__xp {
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A new character level: a filled block, so the yellow stays readable on the light scheme. */
+.workout__level {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exercises,
+.reasons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exercise {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.exercise__head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.exercise__name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exercise__level {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.exercise__level--up {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.exercise__xp,
+.reason__xp {
+  min-width: 3rem;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.exercise__xp {
+  font-weight: 700;
+}
+
+.reason {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+/* The same colours as the records' flexed arms: purple for weight, green for reps. */
+.reason--weight {
+  color: var(--record-weight);
+}
+
+.reason--reps {
+  color: var(--record-reps);
+}
+
+.more {
+  align-self: center;
+}

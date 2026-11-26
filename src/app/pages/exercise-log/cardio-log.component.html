@@ -1,0 +1,36 @@
+<section class="log-compare" [attr.aria-label]="t().lastAndToday">
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+  <olab-cardio-compare
+    [pace]="pace()"
+    [bouts]="bouts()"
+    [record]="record()"
+    [kind]="kind()"
+    [lastBouts]="lastBouts()"
+    [selectedId]="selectedId()"
+    (selected)="select($event)"
+  />
+
+  @if (hasSelection()) {
+    <div class="selection">
+      <span class="selection__summary">{{ t().mistake }}</span>
+      <button type="button" class="button button--small button--danger" (click)="voidSelected()">
+        {{ voidArmed() ? t().confirm : t().void }}
+      </button>
+    </div>
+  }
+</section>
+
+<section class="log-entry" [attr.aria-label]="t().logCardio">
+  <div class="hazard" aria-hidden="true"></div>
+  <olab-cardio-form
+    [exercise]="exercise()"
+    [last]="pace().previous"
+    [entries]="bouts().length"
+    [soFar]="soFar()"
+    [soFarText]="soFarText()"
+    [lastIncline]="lastIncline()"
+    [inclined]="inclined()"
+    [error]="error()"
+    (logged)="log($event)"
+  />
+</section>

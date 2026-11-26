@@ -1,0 +1,67 @@
+<section class="card" aria-labelledby="developer-heading">
+  <h2 id="developer-heading">{{ t().heading }}</h2>
+  <p class="muted">{{ t().intro }}</p>
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <section class="part" aria-labelledby="demo-heading">
+    <h3 id="demo-heading">{{ t().demoHeading }}</h3>
+    <p class="muted">{{ t().demoIntro }}</p>
+    <div class="actions">
+      <button type="button" class="button" (click)="loadDemo()">
+        {{ demoArmed() ? t().demoConfirm : t().demo }}
+      </button>
+    </div>
+    @if (demoMessage(); as text) {
+      <p role="status">{{ text | localize }}</p>
+    }
+  </section>
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <section class="part" aria-labelledby="test-date-heading">
+    <h3 id="test-date-heading">{{ t().testDateHeading }}</h3>
+    <p class="muted">{{ t().testDateIntro }}</p>
+    <label class="field">
+      <span class="field__label">{{ t().pretend }}</span>
+      <input
+        #date
+        class="input date"
+        type="date"
+        [value]="today()"
+        (change)="pretendTodayIs(date.value)"
+      />
+    </label>
+    @if (pretending()) {
+      <p class="warning" role="status">{{ t().onTestDate }}</p>
+      <div class="actions">
+        <button type="button" class="button" (click)="backToRealTime()">
+          {{ t().backToReal }}
+        </button>
+      </div>
+    }
+  </section>
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <section class="part" aria-labelledby="notification-heading">
+    <h3 id="notification-heading">{{ t().notificationHeading }}</h3>
+    <p class="muted">{{ t().notificationIntro }}</p>
+    @if (remindersOn()) {
+      <div class="actions">
+        <button type="button" class="button" [disabled]="sending()" (click)="sendTest()">
+          {{ t().sendTest }}
+        </button>
+      </div>
+    } @else {
+      <p class="muted">{{ t().remindersOff }}</p>
+    }
+    @if (notice(); as notice) {
+      <p [class.error]="notice.failed" role="status">{{ notice.text | localize }}</p>
+    }
+  </section>
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <olab-diagnostics-card />
+</section>

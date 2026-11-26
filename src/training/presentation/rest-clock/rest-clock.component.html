@@ -1,0 +1,9 @@
+@if (rest(); as rest) {
+  <olab-stopwatch
+    [class.stopwatch--big]="big()"
+    [label]="t().rest"
+    [since]="rest"
+    [alertAfterSeconds]="alertSeconds()"
+  />
+}
+<span class="visually-hidden" aria-live="polite">{{ announcement() }}</span>

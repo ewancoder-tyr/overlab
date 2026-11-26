@@ -1,0 +1,12 @@
+@if (!missing()) {
+  @for (frame of frames(); track frame.src) {
+    <img
+      class="frame"
+      [src]="frame.src"
+      [alt]="frame.alt"
+      loading="lazy"
+      decoding="async"
+      (error)="missing.set(true)"
+    />
+  }
+}

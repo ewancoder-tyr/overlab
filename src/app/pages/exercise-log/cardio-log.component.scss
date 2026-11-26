@@ -1,0 +1,21 @@
+/*
+ * This component adds two zones to its parent's full-screen column. `display: contents` makes
+ * the host element itself disappear from the layout, so the two sections become flex children
+ * of the logging screen exactly as the set zones are. Their look (`.log-compare`, `.log-entry`)
+ * is shared and lives in the global stylesheet.
+ */
+:host {
+  display: contents;
+}
+
+.selection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selection__summary {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}

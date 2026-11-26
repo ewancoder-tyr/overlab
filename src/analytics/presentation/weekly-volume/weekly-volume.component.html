@@ -1,0 +1,104 @@
+<p class="summary">
+  <strong class="summary__number">{{ onTarget() }}</strong>
+  <span class="summary__text">{{ t().onTarget(rows().length) }}</span>
+</p>
+
+<!-- The most pressing stalled muscle group, if any. The rest are behind their orange dots. -->
+@if (advice(); as advice) {
+  <p class="advice">{{ advice }}</p>
+}
+
+<ul class="list">
+  @for (row of rows(); track row.id) {
+    <li class="row" [class]="'row row--' + row.status" [class.row--open]="open() === row.id">
+      <!--
+        The whole line is the button that opens its breakdown. The gauge is a drawing of the
+        numbers, so screen readers get the sentence in `aria-label` instead.
+      -->
+      <button
+        type="button"
+        class="toggle"
+        [attr.aria-label]="row.label"
+        [attr.aria-expanded]="open() === row.id"
+        [attr.aria-controls]="'volume-' + row.id"
+        (click)="toggle(row.id)"
+      >
+        <span class="name" aria-hidden="true">
+          @if (row.stalled) {
+            <span class="dot"></span>
+          }
+          <span class="name__text">{{ row.name }}</span>
+        </span>
+        <span class="tube" aria-hidden="true">
+          <span
+            class="tube__target"
+            [style.left.%]="row.targetStartPercent"
+            [style.width.%]="row.targetWidthPercent"
+          ></span>
+          <span
+            class="tube__fill"
+            [style.width.%]="row.fillPercent"
+            [style.--order]="$index"
+          ></span>
+        </span>
+        <span class="value" aria-hidden="true">{{ row.sets }}</span>
+      </button>
+
+      <!--
+        `(animate.enter)` / `(animate.leave)` call these methods when the breakdown appears or is
+        about to go, so it can slide open and shut. Angular keeps a leaving element in the page
+        until its method says the animation is complete.
+      -->
+      @if (open() === row.id) {
+        <div
+          class="detail"
+          [id]="'volume-' + row.id"
+          (animate.enter)="slideOpen($event)"
+          (animate.leave)="slideShut($event)"
+        >
+          @if (row.advice; as advice) {
+            <p class="advice">{{ advice }}</p>
+          }
+          @if (row.breakdown.length === 0) {
+            <p class="muted">{{ t().nothing(windowDays()) }}</p>
+          } @else {
+            <ul class="breakdown">
+              @for (entry of row.breakdown; track entry.id) {
+                <li>
+                  <a
+                    class="breakdown__row"
+                    [routerLink]="['/exercises', entry.id, 'stats']"
+                    [attr.aria-label]="
+                      t().statisticsFor(entry.name) +
+                      ': ' +
+                      entry.sets +
+                      (entry.stalled ? ', ' + t().stalled : '')
+                    "
+                  >
+                    <span class="breakdown__name">{{ entry.name }}</span>
+                    @if (entry.stalled) {
+                      <span class="eyebrow stalled">{{ t().stalled }}</span>
+                    }
+                    <span class="breakdown__value">{{ entry.sets }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+          @if (row.couldAdd.length > 0) {
+            <p class="could-add">
+              <span class="muted">{{ t().couldAdd }}</span>
+              @for (exercise of row.couldAdd; track exercise.id) {
+                <a class="could-add__link" [routerLink]="['/exercises', exercise.id]">{{
+                  exercise.name
+                }}</a>
+              }
+            </p>
+          }
+        </div>
+      }
+    </li>
+  }
+</ul>
+
+<p class="muted">{{ explanation() }}</p>

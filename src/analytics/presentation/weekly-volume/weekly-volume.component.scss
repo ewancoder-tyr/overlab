@@ -1,0 +1,263 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.summary__number {
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 0.9;
+}
+
+.summary__text {
+  color: var(--text-muted);
+}
+
+.list {
+  /*
+   * One grid for all rows, so the name column is as wide as the longest name (up to 9rem) and
+   * every tube still starts at the same place. Russian names ("Передние дельты") need more room
+   * than English ones. `fit-content(9rem)` sizes to the content but never beyond 9rem.
+   */
+  display: grid;
+  grid-template-columns: fit-content(9rem) 1fr 2.75rem;
+  /* No row gap: each line is a 44px touch target of its own. */
+  gap: 0 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  /* The gauge colour. Under target is brand yellow; reaching it turns green, overshooting orange. */
+  --fill: var(--accent);
+  /* The same colour as text: the accent's ink while yellow (black in light), else the fill. */
+  --fill-ink: var(--accent-ink);
+
+  position: relative;
+  /* Its own stacking context, so the band at `z-index: -1` stays behind this row only. */
+  isolation: isolate;
+  display: grid;
+  /* `subgrid`: the row's three cells use the columns of the list above. */
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+}
+
+/*
+ * An open muscle group and its breakdown sit on one flat, faintly yellow band, so the list reads
+ * as belonging to that gauge. The band reaches out to the card's edges (its padding, 1.125rem in
+ * `.card`), with no border or rounding. Drawn by a pseudo-element behind the row rather than as
+ * the row's own background and padding: padding would take room in the shared grid and push the
+ * row's name and tube off the columns of the others. It covers the whole row, so it grows with the
+ * breakdown as that slides.
+ */
+.row::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 -1.125rem;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+.row--open::before {
+  opacity: 1;
+}
+
+/* The line is a button that opens the breakdown; it keeps the look of a plain row. */
+.toggle {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The slide itself is in the component (`slideOpen`), since it needs the measured height. */
+.detail {
+  display: flex;
+  flex-direction: column;
+  grid-column: 1 / -1;
+  gap: 0.5rem;
+  /* Padding, not margin, so the space below is inside the frame and slides with the rest. */
+  padding-bottom: 0.375rem;
+}
+
+/* Orange, the warning colour of the STALLED tag; the words say it too. */
+.advice {
+  margin: 0;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* An exercise that trains this muscle group is stalled. The row's sentence says so. */
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.375rem;
+  border-radius: 999px;
+  background: var(--warning);
+}
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  /* Indented under the gauge's name, so it reads as that muscle group's list, not more gauges. */
+  padding: 0 0 0 0.75rem;
+  list-style: none;
+}
+
+/*
+ * Tighter than the gauges (2rem, not the usual 2.75rem touch target), again so the list reads as
+ * one block under its muscle group. A deliberate exception to the 44px rule: these are secondary
+ * links to statistics, and 32px is still above WCAG's 24px minimum.
+ */
+.breakdown__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+/*
+ * Hairlines only between exercises, never above the first or below the last, so the band ends
+ * cleanly. Tinted from the band's own yellow rather than the grey `--border`, which looked like
+ * stray white lines on it.
+ */
+.breakdown > li + li > .breakdown__row {
+  border-top: 1px solid color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.breakdown__name {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown__value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stalled {
+  flex: none;
+  color: var(--warning);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.could-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.75rem;
+  margin: 0;
+}
+
+.could-add__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--accent-ink);
+}
+
+.row--within {
+  --fill: var(--success);
+  --fill-ink: var(--fill);
+}
+
+.row--over {
+  --fill: var(--warning);
+  --fill-ink: var(--fill);
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Text overflow works on a block of text, not on a flex container, hence the inner span. */
+.name__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The test tube: a rounded track with the target band and the fill inside it. */
+.tube {
+  position: relative;
+  height: 0.875rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-raised);
+}
+
+.tube__target {
+  position: absolute;
+  inset-block: 0;
+  background: var(--target-zone);
+}
+
+.tube__fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  /* A minimum width so that even a little work shows as a visible drop in the tube. */
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--fill);
+  /*
+   * When the page opens, each tube fills from empty, one a moment after the one above it, like
+   * liquid poured down the rack. A keyframe with only `from` animates to the element's own
+   * width, the inline one from the template. `backwards` keeps a tube empty while it waits.
+   */
+  animation: pour 420ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(var(--order, 0) * 25ms);
+}
+
+@keyframes pour {
+  from {
+    width: 0;
+  }
+}
+
+.value {
+  color: var(--fill-ink);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+}

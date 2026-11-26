@@ -1,0 +1,24 @@
+# Build output and caches
+/dist
+/.angular
+/coverage
+
+# Dependencies
+/node_modules
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Unreleased change notes, local only (see docs/releases.md)
+/changelog.md
+
+# Personal Claude Code settings
+/.claude/settings.local.json

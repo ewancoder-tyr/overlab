@@ -1,0 +1,50 @@
+<section class="card" aria-labelledby="data-heading">
+  <h2 id="data-heading">{{ t().heading }}</h2>
+  <p class="muted">
+    {{ signedIn() ? t().introSynced(eventCount()) : t().intro(eventCount()) }}
+  </p>
+
+  <div class="actions">
+    <button type="button" class="button button--primary" (click)="export()">
+      {{ t().export }}
+    </button>
+    <label class="button">
+      {{ t().import }}
+      <input
+        #file
+        class="visually-hidden"
+        type="file"
+        accept="application/json,.json"
+        (change)="import(file)"
+      />
+    </label>
+  </div>
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <!-- Google sign-in, the sync status and signing out: the `sync` context's own part. -->
+  <olab-cloud-backup />
+
+  <div class="hazard" aria-hidden="true"></div>
+
+  <!--
+    Signed in, erasing comes in two strengths: this device only (which also signs it out), or
+    everything, the cloud copy included. Signed out there is only this device to erase.
+  -->
+  <p class="muted">{{ signedIn() ? t().eraseSyncedIntro : t().eraseIntro }}</p>
+  <div class="actions">
+    <button type="button" class="button button--danger" (click)="erase()">
+      {{ armed() === 'erase' ? t().eraseConfirm : t().erase }}
+    </button>
+    @if (signedIn()) {
+      <button type="button" class="button button--danger" (click)="deleteEverything()">
+        {{ armed() === 'delete-everything' ? t().deleteEverythingConfirm : t().deleteEverything }}
+      </button>
+    }
+  </div>
+
+  <!-- One status line for every action on the card, under all of them. -->
+  @if (message(); as text) {
+    <p [class.error]="failed()" role="status">{{ text | localize }}</p>
+  }
+</section>

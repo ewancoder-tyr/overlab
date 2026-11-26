@@ -1,0 +1,22 @@
+@if (shown().length > 0) {
+  <table class="records">
+    <!-- The headers are for screen readers; on screen the columns speak for themselves. -->
+    <thead class="visually-hidden">
+      <tr>
+        <th scope="col">{{ t().session }}</th>
+        <th scope="col">{{ t().date }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of shown(); track row.startedAt) {
+        <tr class="records__row">
+          <td class="records__numbers">{{ row.text }}</td>
+          <td class="records__date">{{ row.startedAt | localDate: 'd MMM y' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="caption">{{ caption() }}</p>
+} @else {
+  <p class="caption">{{ t().empty }}</p>
+}

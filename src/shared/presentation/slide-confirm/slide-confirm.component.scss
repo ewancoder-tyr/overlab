@@ -1,0 +1,75 @@
+:host {
+  display: block;
+}
+
+/* `--progress` (0 to 1) is set by the component: where the thumb is along the track. */
+.track {
+  --thumb: 3rem;
+
+  position: relative;
+  height: var(--thumb);
+  border-radius: 999px;
+  /* The red fills in behind the thumb as it travels, so the track shows how far there is to go. */
+  background: linear-gradient(
+    to right,
+    var(--danger-strong) calc(var(--thumb) / 2 + var(--progress) * (100% - var(--thumb))),
+    color-mix(in srgb, var(--danger-strong) 28%, var(--surface-raised)) 0
+  );
+  /* The slide is ours: the browser must not scroll or go back on it. */
+  touch-action: none;
+  user-select: none;
+}
+
+.track__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Clear of the thumb at rest. */
+  padding-left: var(--thumb);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  /* It fades as the thumb comes over it. */
+  opacity: calc(1 - var(--progress) * 1.5);
+  pointer-events: none;
+}
+
+.thumb {
+  position: absolute;
+  top: 0;
+  left: calc(var(--progress) * (100% - var(--thumb)));
+  display: grid;
+  place-items: center;
+  width: var(--thumb);
+  height: var(--thumb);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--danger-strong);
+  color: #ffffff;
+  cursor: grab;
+  touch-action: none;
+  /* Let go early: it eases back to the start. */
+  transition: left 160ms ease-out;
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+/* Under the finger it must be exactly where the finger is. */
+.track--dragging .thumb {
+  transition: none;
+  cursor: grabbing;
+}

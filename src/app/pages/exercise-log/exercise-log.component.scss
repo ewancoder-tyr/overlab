@@ -1,0 +1,298 @@
+/*
+ * The logging screen covers the whole viewport, including the app's tab bar: mid-set there is one
+ * job, and the back arrow returns to the rest of the app.
+ */
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  max-width: 40rem;
+  margin: 0 auto;
+  background: var(--background);
+}
+
+/*
+ * The exercise's drawing, barely visible, in the top half of the screen: the area above the
+ * comparison that is otherwise empty. The rest clock keeps to the left.
+ *
+ * - `z-index: -1` puts it behind the three zones but, because the host is itself a stacking
+ *   context (fixed + z-index), still in front of the host's background.
+ * - The mask is what fades it out: a mask shows the element where the gradient is opaque and
+ *   hides it where the gradient is transparent, so the drawing is strongest under the title bar
+ *   and gone by the middle of the screen.
+ * - `pointer-events: none` lets taps pass through to whatever is on top of it.
+ */
+.backdrop {
+  position: absolute;
+  z-index: -1;
+  top: 4rem; /* Starts below the title bar, so the title stays clean. */
+  left: 0;
+  width: 100%;
+  height: calc(50% - 4rem);
+  object-fit: contain;
+  /*
+   * Centred, not pinned to a side: the drawings differ in width, so pinned right each exercise's
+   * drawing started at a different place, which looked haphazard. Centred, they all share an axis.
+   */
+  /*
+   * Faint enough that the rest clock and the comparison read over it, bright enough to see the
+   * movement at a glance. The fade starts lower down, so the whole figure shows before it goes.
+   */
+  opacity: 0.38;
+  filter: var(--drawing-filter);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  pointer-events: none;
+}
+
+.bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+}
+
+.bar__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1.75rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * The workout time's slot in the title bar. Its size is fixed whether the stopwatch is there or
+ * not, so the title beside it never shifts when the first set is logged.
+ */
+.bar__time {
+  flex: none;
+  justify-content: flex-end;
+  align-items: center;
+  width: 8rem;
+  height: 2.75rem;
+
+  /* Smaller digits than the pill's default: the title bar is short. Inherited by the stopwatch. */
+  --stopwatch-size: 0.875rem;
+}
+
+/*
+ * The big rest clock: at the top of the middle zone, at a fixed distance under the title bar. The
+ * free room differs per exercise (and per phone), so a clock centred in it would sit higher or
+ * lower on every screen; pinned, it is always where the eye last found it.
+ *
+ * On the left, lined up with everything else on the screen (the rep tiles, the verdict), and out
+ * of the way of the exercise drawing in the middle.
+ *
+ * Every line here is a line the comparison does not get, so the clock is pulled tight on both
+ * sides. Above, the negative margin tucks the room kept for the kettlebell's handle (empty until
+ * the last seconds of rest) up under the title bar, and the handle, when it appears, is drawn over
+ * the bar's lower edge rather than clipped by it. Below, it eats most of the zone's gap, so the
+ * feed starts right under the digits.
+ *
+ * `pointer-events: none`: the clock is only to look at, and its box now reaches into the title
+ * bar, whose back arrow must still take every tap.
+ *
+ * Only the clock itself, not the empty spacer that stands in for it when rest is hidden: pulled
+ * up, that would let the feed run up under the title.
+ */
+.log-rest {
+  flex: none;
+}
+
+olab-rest-clock.log-rest {
+  justify-content: flex-start;
+  margin-top: -1.25rem;
+  margin-bottom: -0.5rem;
+  pointer-events: none;
+}
+
+/*
+ * The shared zone style lets the zone scroll (`overflow-y: auto`), which would also clip the
+ * clock's handle where it reaches over the title bar. Here only the feed inside scrolls, so the
+ * zone itself need not.
+ */
+.log-compare {
+  overflow: visible;
+}
+
+/*
+ * The rest of the zone, under the clock: the comparison, the legend and the selected set. It
+ * takes all the remaining height and sits its content at the bottom, against the entry panel, so
+ * the clock appearing after the first set moves nothing. The entry panel and its log button never
+ * move either: only this part scrolls.
+ *
+ * When the content is taller than the room (many sets, a selected set and the partials stepper
+ * open), it scrolls, and the mask fades its top edge out, so the content seems to slide away
+ * under the clock. A mask fades the content itself to transparent, which reads right over the
+ * exercise drawing; a dark gradient laid on top would show as a band over it.
+ *
+ * Why `column-reverse` around a single child: a scroll box normally opens at its top, but here the
+ * part that matters (today's sets, the selected one) is at the bottom. Reversed, the box's start
+ * is its bottom edge, so it opens scrolled to the bottom and stays there as sets are added, with
+ * no script. The one child (`.log-feed__content`) keeps its own children in their normal order.
+ * Pinning with `justify-content: flex-end` instead would make whatever overflows at the top
+ * unreachable by scrolling.
+ *
+ * The box reaches out over the zone's side padding (negative margin, equal padding), so clipping
+ * does not cut off the selection outline of the comparison, which also reaches past its content.
+ */
+.log-feed {
+  display: flex;
+  flex: 1;
+  flex-direction: column-reverse;
+  min-height: 0;
+  margin-inline: -1.125rem;
+  padding-inline: 1.125rem;
+  overflow-y: auto;
+  /* A scroll that reaches the end stops here, rather than dragging the page or reloading it. */
+  overscroll-behavior: contain;
+  /* The fade at the top already says there is more; a scrollbar would only add clutter. */
+  scrollbar-width: none;
+  mask-image: linear-gradient(to bottom, transparent, #000 1rem);
+}
+
+.log-feed__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  /* Room under the fade, so the topmost line can be scrolled fully clear of it. */
+  padding-top: 1rem;
+}
+
+.icon-button svg {
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The same slot holding the solo reminder's bell: a plain box, so it lays its button out itself. */
+.bar__time--bell {
+  display: flex;
+}
+
+/* The bell of an exercise that has a solo reminder. */
+.icon-button--lit {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/*
+ * The solo reminder editor, as the browser's modal dialog: it sits in the top layer, above the
+ * three zones, which do not move under it.
+ */
+.reminder-dialog {
+  width: min(100% - 2rem, 26rem);
+  max-height: calc(100% - 2rem);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+
+  /* Only an open dialog is laid out; `display` on a closed one would show it. */
+  &[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  &::backdrop {
+    background: rgb(0 0 0 / 70%);
+  }
+
+  h2,
+  .muted {
+    margin: 0;
+  }
+
+  a {
+    color: var(--accent-ink);
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.tile-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.1875rem;
+  background: var(--surface-raised);
+}
+
+.tile-swatch--full {
+  background: var(--technique-full);
+}
+
+.tile-swatch--paused {
+  background: var(--technique-paused);
+}
+
+.tile-swatch--slow-eccentric {
+  background: var(--technique-slow-eccentric);
+}
+
+.tile-swatch--long-length-partial {
+  background: var(--technique-long-length-partial);
+}
+
+.tile-swatch--short-length-partial {
+  background: var(--technique-short-length-partial);
+}
+
+.selection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selection__summary {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.625rem;
+  min-width: 0;
+}
+
+.missing {
+  margin: 1rem;
+}
+
+/* Logging in the past: one orange line under the title bar, so the day is never in doubt. */
+.past-note {
+  position: relative;
+  flex: none;
+  margin: 0;
+  padding: 0.125rem 1rem;
+  background: var(--warning);
+  color: #0a0a08;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}

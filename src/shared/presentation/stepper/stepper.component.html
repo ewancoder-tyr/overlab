@@ -1,0 +1,52 @@
+<button
+  type="button"
+  class="step"
+  [disabled]="atMinimum()"
+  [attr.aria-label]="t().decrease + ' ' + label()"
+  (click)="change(-1)"
+>
+  −
+</button>
+@if (format(); as format) {
+  <!-- Read-only: an <output> is announced when it changes, so the new value is heard. -->
+  <div class="value">
+    <span class="value__label">{{ label() }}</span>
+    <span class="value__row">
+      <output class="value__input value__output" [attr.aria-label]="label()">{{
+        format(value())
+      }}</output>
+      @if (unit(); as unit) {
+        <span class="value__unit">{{ unit }}</span>
+      }
+    </span>
+  </div>
+} @else {
+  <label class="value">
+    <span class="value__label">{{ label() }}</span>
+    <span class="value__row">
+      <input
+        #field
+        class="value__input"
+        type="text"
+        autocomplete="off"
+        [attr.inputmode]="decimal() ? 'decimal' : 'numeric'"
+        [value]="value()"
+        [style.width.ch]="digits() + 0.5"
+        (change)="type(field.value); field.value = '' + value()"
+        (focus)="field.select()"
+      />
+      @if (unit(); as unit) {
+        <span class="value__unit">{{ unit }}</span>
+      }
+    </span>
+  </label>
+}
+<button
+  type="button"
+  class="step"
+  [disabled]="atMaximum()"
+  [attr.aria-label]="t().increase + ' ' + label()"
+  (click)="change(1)"
+>
+  +
+</button>

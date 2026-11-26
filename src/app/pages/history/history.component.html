@@ -1,0 +1,260 @@
+<h2 class="visually-hidden">{{ t().heading }}</h2>
+
+<!-- Which day: the month (it opens the calendar), and under it the week or the calendar. -->
+<section class="card picker">
+  <div class="picker__head">
+    <button
+      type="button"
+      class="icon-button"
+      [disabled]="!canStep(-1)"
+      [attr.aria-label]="calendarOpen() ? t().previousMonth : t().previousDay"
+      (click)="step(-1)"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+    <button
+      type="button"
+      class="picker__month"
+      [attr.aria-expanded]="calendarOpen()"
+      [attr.aria-label]="t().chooseDay"
+      (click)="calendarOpen.set(!calendarOpen())"
+    >
+      <!-- `LLLL` is the month standing alone: "ноябрь", not the "ноября" of a date. -->
+      {{ (calendarOpen() ? calendarDate() : selectedDate()) | localDate: 'LLLL y' }}
+    </button>
+    <button
+      type="button"
+      class="icon-button"
+      [disabled]="!canStep(1)"
+      [attr.aria-label]="calendarOpen() ? t().nextMonth : t().nextDay"
+      (click)="step(1)"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
+  </div>
+
+  <!-- One day as drawn in both the week strip and the calendar. -->
+  <ng-template #dayCell let-cell>
+    <button
+      type="button"
+      class="day"
+      [class.day--selected]="cell.selected"
+      [class.day--today]="cell.today"
+      [disabled]="cell.future"
+      [attr.aria-pressed]="cell.selected"
+      [attr.aria-label]="(cell.date | localDate: 'EEEE d MMMM') + ' ' + describe(cell)"
+      (click)="select(cell.day)"
+    >
+      <span class="day__number">{{ cell.date | localDate: 'd' }}</span>
+      <i class="day__dot" [class.day__dot--on]="cell.active"></i>
+    </button>
+  </ng-template>
+
+  <div class="weekdays" aria-hidden="true">
+    @for (cell of week(); track cell.day) {
+      <span>{{ cell.date | localDate: 'EEEEEE' }}</span>
+    }
+  </div>
+
+  @if (calendarOpen()) {
+    <div class="grid">
+      @for (row of month(); track $index) {
+        @for (cell of row; track $index) {
+          @if (cell) {
+            <ng-container *ngTemplateOutlet="dayCell; context: { $implicit: cell }" />
+          } @else {
+            <span></span>
+          }
+        }
+      }
+    </div>
+    <!-- A year at a time, for going far back. -->
+    <div class="years">
+      <button type="button" class="button button--small" (click)="stepYear(-1)">
+        ‹ {{ calendarDate().getFullYear() - 1 }}
+      </button>
+      <button type="button" class="button button--small" (click)="stepYear(1)">
+        {{ calendarDate().getFullYear() + 1 }} ›
+      </button>
+    </div>
+  } @else {
+    <div
+      class="grid"
+      role="group"
+      [attr.aria-label]="t().week"
+      (touchstart)="weekTouchStart($event)"
+      (touchend)="weekTouchEnd($event)"
+    >
+      @for (cell of week(); track cell.day) {
+        <ng-container *ngTemplateOutlet="dayCell; context: { $implicit: cell }" />
+      }
+    </div>
+  }
+</section>
+
+<!-- The day itself. The whole area takes the swipe, the empty space under the cards included. -->
+<div
+  class="blocks"
+  (touchstart)="dayTouchStart($event)"
+  (touchmove)="dayTouchMove($event)"
+  (touchend)="dayTouchEnd($event)"
+  (touchcancel)="dayTouchCancel()"
+>
+  <!--
+    The pager's track: the day on screen with its neighbours on either side, moved as one. It
+    follows the finger, so the next day is in view as soon as a swipe starts (see the pager in
+    the component).
+  -->
+  <div
+    class="track"
+    [class.track--instant]="instant()"
+    [style.transform]="'translateX(calc(' + -turn() + ' * (100% + 1rem) + ' + drag() + 'px))'"
+  >
+    @for (page of pages(); track page.place) {
+      <!-- The side pages are scenery until they arrive: hidden from screen readers and taps. -->
+      <div
+        class="page"
+        [class]="'page page--' + page.place"
+        [attr.aria-hidden]="page.place === 'middle' ? null : true"
+        [attr.inert]="page.place === 'middle' ? null : ''"
+      >
+        <header class="date">
+          <h3 class="date__name">{{ page.date | localDate: 'EEEE d MMMM' }}</h3>
+          @if (page.xp; as earned) {
+            <strong class="date__xp">+{{ earned }} XP</strong>
+          }
+          @if (page.blocks.length > 0) {
+            <button
+              type="button"
+              class="button button--small date__edit"
+              [attr.aria-pressed]="editing()"
+              (click)="toggleEditing()"
+            >
+              {{ editing() ? t().done : t().edit }}
+            </button>
+          }
+        </header>
+        @if (editing()) {
+          <p class="muted hint">{{ t().pick }}</p>
+        }
+
+        @for (block of page.blocks; track block.id) {
+          <section class="card block">
+            <header class="block__head">
+              <span class="block__time">{{ block.startedAt | localDate: 'HH:mm' }}</span>
+              <span class="eyebrow">{{
+                block.kind === 'workout' ? t().workout : t().standalone
+              }}</span>
+              @if (block.duration; as duration) {
+                <span class="block__duration">{{ duration }}</span>
+              }
+            </header>
+            <ul class="plain-list">
+              @for (exercise of block.exercises; track exercise.id) {
+                <li>
+                  @if (editing()) {
+                    <!-- Editing: the entries are buttons, and the marked one gets the slide. -->
+                    <div class="exercise">
+                      <span class="exercise__head">
+                        <span class="exercise__name">{{ exercise.name }}</span>
+                      </span>
+                      @if (exercise.cardio) {
+                        <ul class="bouts">
+                          @for (bout of exercise.bouts; track bout.id) {
+                            <li>
+                              <button
+                                type="button"
+                                class="bout"
+                                [class.bout--marked]="bout.id === marked()"
+                                [attr.aria-pressed]="bout.id === marked()"
+                                (click)="mark(bout.id)"
+                              >
+                                {{ bout.text }}
+                              </button>
+                              @if (bout.id === marked()) {
+                                <olab-slide-confirm
+                                  class="slide"
+                                  [label]="t().slideToDelete"
+                                  (confirmed)="deleteMarked('cardio')"
+                                />
+                              }
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <olab-set-grid
+                          [sets]="exercise.sets"
+                          [tones]="exercise.tones"
+                          [compact]="true"
+                          [interactive]="true"
+                          [selectedId]="$any(marked())"
+                          (selected)="mark($event)"
+                        />
+                        @if (holdsMarked(exercise.sets)) {
+                          <olab-slide-confirm
+                            class="slide"
+                            [label]="t().slideToDelete"
+                            (confirmed)="deleteMarked('set')"
+                          />
+                        }
+                      }
+                    </div>
+                  } @else {
+                    <a class="exercise" [routerLink]="['/exercises', exercise.id, 'stats']">
+                      <span class="exercise__head">
+                        <span class="exercise__name">{{ exercise.name }}</span>
+                        @if (exercise.record; as record) {
+                          <span class="eyebrow exercise__record">{{ record }}</span>
+                        }
+                      </span>
+                      @if (exercise.cardio; as cardio) {
+                        <span class="exercise__cardio">{{ cardio }}</span>
+                      } @else {
+                        <olab-set-grid
+                          [sets]="exercise.sets"
+                          [tones]="exercise.tones"
+                          [compact]="true"
+                        />
+                      }
+                    </a>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        } @empty {
+          <section class="card">
+            <p class="muted">{{ empty() ? t().nothing : t().restDay }}</p>
+          </section>
+        }
+
+        <!-- Something done on this day and never logged: go back to it (see `logOnThisDay`). -->
+        @if (page.place === 'middle') {
+          @if (backfilling()) {
+            <section class="card past">
+              <label class="past__time">
+                <span class="eyebrow">{{ t().at }}</span>
+                <input #time type="time" class="past__field" value="12:00" />
+              </label>
+              <button
+                type="button"
+                class="button button--primary"
+                (click)="logOnThisDay(time.value)"
+              >
+                {{ t().start }}
+              </button>
+              @if (notPast()) {
+                <p class="past__error" role="alert">{{ t().notPast }}</p>
+              }
+              <p class="muted hint">{{ t().pastHint }}</p>
+            </section>
+          } @else {
+            <button type="button" class="button past__open" (click)="backfilling.set(true)">
+              {{ t().logOnThisDay }}
+            </button>
+          }
+        }
+      </div>
+    }
+  </div>
+</div>

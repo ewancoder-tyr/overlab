@@ -1,0 +1,92 @@
+<p class="status" [class]="'status status--' + status().tone" aria-live="polite">
+  <!--
+    A one-item loop keyed on the words themselves: when the verdict changes, the old headline is
+    removed and a new one created, and only a new element runs its `animate.enter` animation.
+  -->
+  @for (headline of [status().headline]; track headline) {
+    <strong class="status__headline" [animate.enter]="wipe()">{{ headline }}</strong>
+  }
+</p>
+
+<!-- The tiles of one set. Shared by last time's cells, today's cells and the target outline. -->
+<ng-template #tiles let-cell>
+  <span class="tiles">
+    @for (tile of cell.tiles; track $index) {
+      <span class="tile" [style.--technique]="'var(--technique-' + tile.technique + ')'">{{
+        tile.reps
+      }}</span>
+    }
+    @if (cell.failure) {
+      <i class="failure"></i>
+    } @else if (cell.light) {
+      <i class="failure failure--light"></i>
+    } @else if (cell.easy) {
+      <i class="failure failure--easy"></i>
+    }
+    @if (cell.record) {
+      <!-- A personal record. On the corner, so the tile keeps its size; the label says it. -->
+      <olab-record-mark class="record" [kind]="cell.record" [animate.enter]="pop()" />
+    }
+  </span>
+  <span class="load">{{ cell.load }}</span>
+</ng-template>
+
+<!--
+  One CSS grid for both sessions, so the n-th set of today sits exactly under the n-th of last
+  time. Every cell names its own column and row; the two row labels overflow from column one.
+-->
+<div class="table">
+  <div class="table__grid">
+    @if (pace().previousStartedAt; as startedAt) {
+      <span class="eyebrow label label--last">
+        {{ t().last }} · {{ startedAt | localDate: 'EEE d MMM' }} · {{ lastReps() }}
+        {{ t().reps }}
+      </span>
+    }
+    <span class="eyebrow eyebrow--accent label label--today">
+      {{ t().today }}
+      @if (todayReps() > 0) {
+        · {{ todayReps() }} {{ t().reps }}
+      }
+    </span>
+
+    @for (column of columns(); track $index) {
+      @if (column.last; as cell) {
+        <span
+          class="cell cell--last"
+          role="img"
+          [style.grid-column]="$index + 1"
+          [attr.aria-label]="t().lastTime + label(column, cell)"
+        >
+          <ng-container *ngTemplateOutlet="tiles; context: { $implicit: cell }" />
+        </span>
+      }
+
+      @if (column.today; as cell) {
+        <button
+          type="button"
+          class="cell cell--today"
+          [animate.enter]="stamp()"
+          [class]="'cell cell--today cell--' + (cell.tone ?? 'none')"
+          [class.cell--warm-up]="cell.warmUp"
+          [class.cell--selected]="cell.id === selectedId()"
+          [style.grid-column]="$index + 1"
+          [attr.aria-label]="t().todayLabel + label(column, cell)"
+          [attr.aria-pressed]="cell.id === selectedId()"
+          (click)="selected.emit(cell.id)"
+        >
+          <ng-container *ngTemplateOutlet="tiles; context: { $implicit: cell }" />
+        </button>
+      } @else if (column.target; as cell) {
+        <span
+          class="cell cell--today cell--target"
+          role="img"
+          [style.grid-column]="$index + 1"
+          [attr.aria-label]="t().nextSet + cell.text"
+        >
+          <ng-container *ngTemplateOutlet="tiles; context: { $implicit: cell }" />
+        </span>
+      }
+    }
+  </div>
+</div>

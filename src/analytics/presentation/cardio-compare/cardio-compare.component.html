@@ -1,0 +1,106 @@
+<p class="status" [class]="'status status--' + status().tone" aria-live="polite">
+  <strong class="status__headline">{{ status().headline }}</strong>
+  <span class="status__detail">{{ status().detail }}</span>
+</p>
+
+<!-- The numbers of one row. Shared by last time's row and today's. -->
+<ng-template #numbers let-cells>
+  @for (cell of cells; track $index) {
+    <span class="cell" [class]="'cell cell--' + cell.tone">
+      @if (cell.record !== undefined) {
+        <!-- The number that set today's record. The label next to "Today" says which. -->
+        <olab-record-mark class="record" [kind]="cell.record" />
+      }
+      <span class="cell__value">{{ cell.value }}</span>
+      <span class="cell__unit">{{ cell.unit }}</span>
+    </span>
+  }
+</ng-template>
+
+<!--
+  A treadmill session's segments: a block each, as wide as its time and as tall as its incline.
+  Today's are buttons (tap one to select it for voiding); last time's are only a picture.
+-->
+<ng-template #profile let-blocks let-pickable="pickable">
+  <ul class="profile" [class.profile--last]="!pickable" [attr.aria-label]="t().segments">
+    @for (block of blocks; track block.id) {
+      <li class="segment" [style.flex-grow]="block.grow" [style.--height]="block.height">
+        @if (pickable) {
+          <button
+            type="button"
+            class="segment__bar"
+            [class.segment__bar--selected]="block.id === selectedId()"
+            [attr.aria-pressed]="block.id === selectedId()"
+            [attr.aria-label]="block.text"
+            (click)="selected.emit(block.id)"
+          >
+            <span aria-hidden="true">{{ block.incline }}</span>
+          </button>
+        } @else {
+          <span class="segment__bar" role="img" [attr.aria-label]="block.text">
+            <span aria-hidden="true">{{ block.incline }}</span>
+          </span>
+        }
+      </li>
+    }
+  </ul>
+</ng-template>
+
+<div
+  class="rows"
+  [class.rows--dense]="emptyCells().length > 4"
+  [style.--columns]="emptyCells().length"
+>
+  @if (lastCells(); as cells) {
+    <span class="eyebrow"
+      >{{ t().last }} · {{ pace().previousStartedAt | localDate: 'EEE d MMM' }}</span
+    >
+    <div class="row row--last">
+      <ng-container *ngTemplateOutlet="numbers; context: { $implicit: cells }" />
+    </div>
+    @if (lastProfile().length > 0) {
+      <ng-container
+        *ngTemplateOutlet="profile; context: { $implicit: lastProfile(), pickable: false }"
+      />
+    }
+  }
+
+  <span class="eyebrow eyebrow--accent"
+    >{{ t().today }}
+    @if (recordLabel(); as record) {
+      · {{ record }}
+    }
+  </span>
+  @if (todayCells(); as cells) {
+    <div class="row row--today">
+      <ng-container *ngTemplateOutlet="numbers; context: { $implicit: cells }" />
+    </div>
+  } @else {
+    <div class="row row--empty">
+      <ng-container *ngTemplateOutlet="numbers; context: { $implicit: emptyCells() }" />
+    </div>
+  }
+  @if (todayProfile().length > 0) {
+    <ng-container
+      *ngTemplateOutlet="profile; context: { $implicit: todayProfile(), pickable: true }"
+    />
+  }
+</div>
+
+@if (chips().length > 0) {
+  <ul class="chips" [attr.aria-label]="t().entries">
+    @for (chip of chips(); track chip.id) {
+      <li>
+        <button
+          type="button"
+          class="chip"
+          [class.chip--selected]="chip.id === selectedId()"
+          [attr.aria-pressed]="chip.id === selectedId()"
+          (click)="selected.emit(chip.id)"
+        >
+          {{ chip.text }}
+        </button>
+      </li>
+    }
+  </ul>
+}

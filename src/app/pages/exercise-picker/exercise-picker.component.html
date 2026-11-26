@@ -1,0 +1,116 @@
+<!--
+  One row, used by both lists below. An `ng-template` is not rendered where it is written; each
+  list stamps it out with `ngTemplateOutlet`, passing the item as the template's `let-item`.
+-->
+<ng-template #row let-item>
+  <a
+    class="list-link entry__main"
+    [routerLink]="['/exercises', item.exercise.id]"
+    [queryParams]="item.solo ? { solo: 1 } : null"
+  >
+    <olab-exercise-figure [exercise]="item.exercise" [thumbnail]="true" [done]="item.sets > 0" />
+    <span class="item">
+      @if (item.current) {
+        <span class="visually-hidden">{{ t().current }}</span>
+      }
+      <span class="item__name">{{ item.exercise.name | localize }}</span>
+      <!--
+        The tag shares the muscles line, which is cut short to make room, so the row keeps its
+        height. Orange is the warning colour; the word says it too.
+      -->
+      <span class="item__detail muted">
+        @if (item.stalled) {
+          <span class="eyebrow stalled" [title]="t().stalledDetail">{{ t().stalled }}</span>
+        }
+        <span class="item__muscles">{{ item.detail }}</span>
+      </span>
+    </span>
+    @if (item.sets > 0) {
+      <span class="badge badge--done">
+        <span class="visually-hidden">{{ t().doneToday }}</span>
+        {{ item.doneLabel }}
+      </span>
+    } @else if (item.next) {
+      <span class="badge badge--next">{{ t().next }}</span>
+    }
+  </a>
+  <a
+    class="entry__stats"
+    [routerLink]="['/exercises', item.exercise.id, 'stats']"
+    [attr.aria-label]="t().statisticsFor(item.exercise.name | localize)"
+    [title]="t().statisticsFor(item.exercise.name | localize)"
+  >
+    <!-- A small bar-chart icon. -->
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M4 20V11h3.5v9zM10.25 20V4h3.5v16zM16.5 20v-6H20v6z" fill="currentColor" />
+    </svg>
+  </a>
+</ng-template>
+
+<!-- How long this workout has lasted and the rest since the last set. Only during a workout. -->
+@if (inProgress()) {
+  <div class="clocks">
+    <olab-workout-time />
+    @if (showsRest()) {
+      <olab-rest-clock [big]="false" />
+    }
+  </div>
+}
+
+<!-- Habits outside workouts (push-ups every morning), pinned on top: they are done first. -->
+@if (standalone().length > 0) {
+  <section class="card" aria-labelledby="solo-heading">
+    <div>
+      <span class="eyebrow eyebrow--accent">{{ t().outsideWorkouts }}</span>
+      <h2 id="solo-heading">{{ t().solo }}</h2>
+    </div>
+    <ul class="plain-list">
+      @for (item of standalone(); track item.exercise.id) {
+        <li class="entry" [class.entry--done]="item.sets > 0">
+          <ng-container [ngTemplateOutlet]="row" [ngTemplateOutletContext]="{ $implicit: item }" />
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+@if (planned().length > 0) {
+  <section class="card" aria-labelledby="plan-heading">
+    <div>
+      <span class="eyebrow eyebrow--accent">{{ t().thePlan }}</span>
+      <h2 id="plan-heading">{{ inProgress() ? t().thisWorkout : t().nextWorkout }}</h2>
+    </div>
+    <!-- An ordered list: the order is the point. -->
+    <ol class="plain-list">
+      @for (item of planned(); track item.exercise.id) {
+        <li class="entry" [class.entry--done]="item.sets > 0" [class.entry--current]="item.current">
+          <ng-container [ngTemplateOutlet]="row" [ngTemplateOutletContext]="{ $implicit: item }" />
+        </li>
+      }
+    </ol>
+  </section>
+}
+
+@if (favorites().length > 0) {
+  <section class="card" aria-labelledby="favorites-heading">
+    <h2 id="favorites-heading">{{ planned().length > 0 ? t().otherFavorites : t().favorites }}</h2>
+    <ul class="plain-list">
+      @for (item of favorites(); track item.exercise.id) {
+        <li class="entry" [class.entry--current]="item.current">
+          <ng-container [ngTemplateOutlet]="row" [ngTemplateOutletContext]="{ $implicit: item }" />
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<section class="card">
+  @if (planned().length === 0 && favorites().length === 0) {
+    <h2>{{ t().noExercises }}</h2>
+    <p class="muted">{{ cardioOnly() ? t().noCardioDetail : t().noExercisesDetail }}</p>
+  } @else {
+    <p class="muted">{{ t().lookingElse }}</p>
+  }
+  <!-- Leads to another tab, so it replaces the address like the tab bar does (app.component.html). -->
+  <a class="button" routerLink="/catalog" replaceUrl>{{ t().openCatalog }}</a>
+</section>

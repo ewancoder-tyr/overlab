@@ -1,0 +1,38 @@
+/*
+ * The disc's colours are two custom properties, so the rep record only swaps them. A dark ring
+ * around the disc separates it from whatever it sits on, a yellow tile included.
+ */
+:host {
+  --disc: var(--record-weight);
+  --figure: var(--on-record-weight);
+
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--disc);
+  box-shadow: 0 0 0 2px var(--background);
+}
+
+:host(.record-mark--reps) {
+  --disc: var(--record-reps);
+  --figure: var(--on-record-reps);
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.arm {
+  fill: var(--figure);
+}
+
+/* Drawn in the disc's colour, so they read as cuts into the arm. */
+.cut {
+  fill: none;
+  stroke: var(--disc);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}

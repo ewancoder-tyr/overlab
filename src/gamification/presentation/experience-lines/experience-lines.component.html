@@ -1,0 +1,24 @@
+<!-- Each line is a native progress bar for assistive technology, drawn by hand for the eye. -->
+@if (exercise(); as exercise) {
+  <div
+    class="line line--top"
+    role="progressbar"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-valuenow]="exercise.rounded"
+    [attr.aria-label]="exercise.label"
+  >
+    <span class="line__fill" [style.width.%]="exercise.percent"></span>
+  </div>
+}
+
+<div
+  class="line line--bottom"
+  role="progressbar"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  [attr.aria-valuenow]="character().rounded"
+  [attr.aria-label]="character().label"
+>
+  <span class="line__fill" [style.width.%]="character().percent"></span>
+</div>

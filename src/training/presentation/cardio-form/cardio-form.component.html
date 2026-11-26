@@ -1,0 +1,117 @@
+<!--
+  `inputmode="numeric"` opens the digits-only keypad on a phone. The inputs are `type="text"`
+  rather than `type="number"`, which adds spinner arrows and swallows invalid input silently.
+  Each `#name` is a template reference to its <input>, read in the (input) handler.
+
+  A treadmill puts its incline beside the fields (`form--treadmill`): the switch and the wheel
+  are as tall as the three rows, so the panel is no taller than for any other cardio.
+-->
+<div class="form" [class.form--treadmill]="kind() === 'treadmill'">
+  <div class="fields">
+    @if (kind() !== 'timed') {
+      <label class="row">
+        <span class="row__label"
+          >{{ t().distance }} <small class="row__inline-unit">{{ t().m }}</small></span
+        >
+        <input
+          #distanceInput
+          class="number"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          [placeholder]="last()?.distanceMeters ?? ''"
+          [value]="distance()"
+          (input)="distance.set(distanceInput.value)"
+        />
+        <span class="row__unit">{{ t().m }}</span>
+      </label>
+    }
+
+    <!-- Two inputs under one visible label: `role="group"` names the pair for screen readers. -->
+    <div class="row" role="group" aria-labelledby="cardio-time-label">
+      <span id="cardio-time-label" class="row__label"
+        >{{ t().time }} <small class="row__inline-unit">{{ t().minSec }}</small></span
+      >
+      <span class="time">
+        <input
+          #minutesInput
+          class="number"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          [attr.aria-label]="t().minutes"
+          [placeholder]="lastMinutes()"
+          [value]="minutes()"
+          (input)="minutes.set(minutesInput.value)"
+        />
+        <span class="time__colon" aria-hidden="true">:</span>
+        <input
+          #secondsInput
+          class="number"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          [attr.aria-label]="t().seconds"
+          [placeholder]="lastSeconds()"
+          [value]="seconds()"
+          (input)="seconds.set(secondsInput.value)"
+        />
+      </span>
+      <span class="row__unit">{{ t().minSec }}</span>
+    </div>
+
+    @if (kind() !== 'timed') {
+      <label class="row">
+        <span class="row__label"
+          >{{ t().calories }} <small class="row__inline-unit">{{ t().kcal }}</small></span
+        >
+        <input
+          #caloriesInput
+          class="number"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          [placeholder]="last()?.calories ?? ''"
+          [value]="calories()"
+          (input)="calories.set(caloriesInput.value)"
+        />
+        <span class="row__unit">{{ t().kcal }}</span>
+      </label>
+    }
+  </div>
+
+  @if (kind() === 'treadmill') {
+    <!--
+      The incline of the segment being logged. The switch is the quick path: one tap for
+      "inclined, as before" or "flat". The wheel under it tunes the number, and turning it
+      switches the incline on.
+    -->
+    <div class="incline" [class.incline--off]="!inclineOn()">
+      <button
+        type="button"
+        class="incline__switch"
+        [attr.aria-pressed]="inclineOn()"
+        [attr.aria-label]="t().inclineOn"
+        (click)="inclineOn.set(!inclineOn())"
+      >
+        {{ t().incline }}
+      </button>
+      <olab-wheel-picker
+        class="incline__wheel"
+        [values]="inclines"
+        [value]="incline()"
+        [label]="t().incline"
+        [format]="formatIncline()"
+        (valueChange)="pickIncline($event)"
+      />
+    </div>
+  }
+</div>
+
+<p class="hint">{{ hint() }}</p>
+
+@if (error(); as message) {
+  <p class="error" role="alert">{{ message | localize }}</p>
+}
+
+<olab-log-button [label]="logLabel()" (pressed)="submit()" />

@@ -1,0 +1,59 @@
+/* A part of the Data page's "Your data" card, not a card of its own. */
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.muted,
+.warning,
+.error {
+  margin: 0;
+}
+
+.email {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.status {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Green is for "better", and nothing is better than everything being safe. */
+.status--good {
+  color: var(--success);
+}
+
+.status--warning,
+.warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.status .muted {
+  display: block;
+  font-weight: 400;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Google's button is an iframe of its own; this only reserves its height so nothing jumps. */
+.google-button {
+  min-height: 44px;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.875rem;
+}

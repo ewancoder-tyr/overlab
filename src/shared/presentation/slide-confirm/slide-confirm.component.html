@@ -1,0 +1,20 @@
+<div #track class="track" [class.track--dragging]="dragging()" [style.--progress]="progress()">
+  <span class="track__label" aria-hidden="true">{{ label() }}</span>
+  <button
+    #thumb
+    type="button"
+    class="thumb"
+    role="slider"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-valuenow]="progress() * 100"
+    [attr.aria-label]="label()"
+    (pointerdown)="down($event, thumb)"
+    (pointermove)="move($event)"
+    (pointerup)="up()"
+    (pointercancel)="up()"
+    (keydown)="key($event)"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7" /></svg>
+  </button>
+</div>

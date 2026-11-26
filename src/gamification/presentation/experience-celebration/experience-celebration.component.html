@@ -1,0 +1,40 @@
+<!-- The animations are for the eye; a screen reader hears one polite sentence instead. -->
+<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+<div class="toasts" aria-hidden="true">
+  @for (toast of shown(); track toast.id) {
+    <div
+      class="toast"
+      [class.toast--leveled]="toast.leveled"
+      [class.toast--bonus]="toast.bonuses.length > 0"
+    >
+      <span class="toast__xp">+{{ toast.xp }} XP</span>
+      @for (bonus of toast.bonuses; track bonus.reason) {
+        <span
+          class="toast__bonus"
+          [class.toast__bonus--weight]="bonus.reason === 'weight-record'"
+          [class.toast__bonus--reps]="bonus.reason === 'rep-record'"
+        >
+          {{ bonus.name }} <strong>+{{ bonus.xp }}</strong>
+        </span>
+      }
+      @if (toast.line; as line) {
+        <span class="toast__line">{{ line }}</span>
+      }
+    </div>
+  }
+</div>
+
+@if (levelUp(); as level) {
+  <!-- Keyed by the level, so a second level-up restarts the animation instead of reusing it. -->
+  @for (key of [level]; track key) {
+    <div class="burst" aria-hidden="true">
+      <span class="burst__rays"></span>
+      <div class="burst__badge">
+        <span class="burst__title">{{ t().levelUp }}</span>
+        <span class="burst__number">{{ level }}</span>
+        <span class="burst__rank">{{ levelTitle() }}</span>
+      </div>
+    </div>
+  }
+}

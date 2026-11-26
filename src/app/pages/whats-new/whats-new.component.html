@@ -1,0 +1,19 @@
+<h2 class="visually-hidden">{{ t().heading }}</h2>
+@for (release of releases; track release.version; let newest = $first) {
+  <section class="card" [attr.aria-labelledby]="'release-' + release.version">
+    <div>
+      <span class="eyebrow" [class.eyebrow--accent]="newest">
+        {{ newest ? t().thisVersion : '' }}{{ release.date | localDate: 'd MMM y' }}
+      </span>
+      <h3 class="version" [id]="'release-' + release.version">
+        {{ t().version }} {{ release.version }}
+      </h3>
+    </div>
+    <p class="summary">{{ release.summary | localize }}</p>
+    <ul class="changes">
+      @for (change of release.changes[language()]; track change) {
+        <li>{{ change }}</li>
+      }
+    </ul>
+  </section>
+}

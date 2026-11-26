@@ -1,0 +1,44 @@
+[
+  {
+    "version": "1.0.0",
+    "date": "2026-11-26",
+    "summary": {
+      "en": "OverLab 1.0: weekly volume per muscle group, one-thumb logging, progression, records, cardio, reminders and sync. Free, and it works offline.",
+      "ru": "OverLab 1.0: недельный объём по группам мышц, запись подходов одним пальцем, прогрессия, рекорды, кардио, напоминания и синхронизация. Бесплатно и работает без сети."
+    },
+    "changes": {
+      "en": [
+        "Weekly volume: every muscle group's sets for the week against your target range. Tap a gauge to see which exercises gave it its sets.",
+        "One-thumb logging: weight and reps are prefilled with the set to match, so most sets take one tap. Partials, sets to failure, light and easy sets are a chip away.",
+        "Progression: every set and every session is compared with last time, and you see whether you are ahead, level or behind while you train.",
+        "Personal records and stall warnings: a weight record and a rep record per exercise, a table of the numbers to beat, and a warning with advice when an exercise or a muscle group stops progressing.",
+        "A rest clock with alerts, the workout time, and a screen that stays on while you train.",
+        "Workout plans: set how many workouts you rotate through, and the Train page lists the exercises of the next one.",
+        "Cardio: distance, time and calories, a treadmill with incline segments, sauna, a weekly cardio goal, progress charts and records of its own.",
+        "Solo sets: exercises done outside workouts, such as morning push-ups, with their own history and their own reminders.",
+        "History: every day you trained. Delete an entry made by mistake, or log a workout on a past day.",
+        "A catalog of exercises with form notes, two drawings each and a muscle map. Star your favorites.",
+        "Reminders on your gym days, with a roast about the numbers to beat.",
+        "Your data stays on your phone and the app works offline. Export a backup, or sign in with Google to keep a cloud copy and share one log between devices.",
+        "Experience and levels, if you like a game: titles, celebrations, a leaderboard, and buddies who hear about each other's sets.",
+        "English and Russian, a dark and a light colour scheme, and a setting to show only lifting or only cardio."
+      ],
+      "ru": [
+        "Недельный объём: подходы каждой группы мышц за неделю в сравнении с вашей целью. Нажмите на шкалу, чтобы увидеть, какие упражнения дали эти подходы.",
+        "Запись одним пальцем: вес и повторы уже подставлены по подходу, который нужно повторить, так что большинство подходов записывается одним нажатием. Частичные повторы, подходы до отказа, лёгкие подходы и подходы «слегка» включаются одной кнопкой.",
+        "Прогрессия: каждый подход и каждая тренировка сравниваются с прошлым разом, и прямо во время тренировки видно, идёте вы с опережением, вровень или отстаёте.",
+        "Личные рекорды и предупреждения о застое: рекорд веса и рекорд повторов для каждого упражнения, таблица результатов, которые нужно побить, и предупреждение с советом, когда упражнение или группа мышц перестаёт прогрессировать.",
+        "Таймер отдыха с сигналами, время тренировки и экран, который не гаснет, пока вы тренируетесь.",
+        "Планы тренировок: укажите, сколько тренировок вы чередуете, и на странице «Зал» появятся упражнения следующей.",
+        "Кардио: дистанция, время и калории, беговая дорожка с отрезками и наклоном, сауна, недельная цель по кардио, графики прогресса и свои рекорды.",
+        "Соло-подходы: упражнения вне тренировок, например отжимания по утрам, со своей историей и своими напоминаниями.",
+        "История: каждый день, когда вы тренировались. Можно удалить ошибочную запись или записать тренировку в прошедший день.",
+        "Каталог упражнений с описанием техники, двумя рисунками для каждого и картой мышц. Отмечайте избранные звёздочкой.",
+        "Напоминания в дни тренировок, с подколкой о результатах, которые нужно побить.",
+        "Данные хранятся на телефоне, и приложение работает без сети. Сохраните резервную копию в файл или войдите через Google, чтобы хранить копию в облаке и вести один журнал на нескольких устройствах.",
+        "Опыт и уровни для тех, кто любит игру: звания, поздравления, таблица лидеров и напарники, которые узнают о подходах друг друга.",
+        "Русский и английский языки, тёмная и светлая схемы и настройка, чтобы показывать только силовые упражнения или только кардио."
+      ]
+    }
+  }
+]

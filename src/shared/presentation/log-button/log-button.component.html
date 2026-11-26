@@ -1,0 +1,16 @@
+<button
+  type="button"
+  class="dumbbell"
+  [class.dumbbell--lifted]="lifted()"
+  (click)="press()"
+  (animationend)="lifted.set(false)"
+>
+  <!-- Three plates a side, smallest outermost, as they are loaded on a real bar. -->
+  <span class="dumbbell__plate dumbbell__plate--small" aria-hidden="true"></span>
+  <span class="dumbbell__plate dumbbell__plate--medium" aria-hidden="true"></span>
+  <span class="dumbbell__plate" aria-hidden="true"></span>
+  <span class="dumbbell__handle">{{ label() }}</span>
+  <span class="dumbbell__plate" aria-hidden="true"></span>
+  <span class="dumbbell__plate dumbbell__plate--medium" aria-hidden="true"></span>
+  <span class="dumbbell__plate dumbbell__plate--small" aria-hidden="true"></span>
+</button>

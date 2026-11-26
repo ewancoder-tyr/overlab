@@ -1,0 +1,55 @@
+/* A part of the experience card in Settings, not a card of its own. */
+.switch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+h3,
+.muted,
+.error {
+  margin: 0;
+}
+
+.button {
+  align-self: flex-start;
+}
+
+/* The same two-way switch as the others in Settings (settings.component.scss). */
+.choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--background);
+}
+
+.choice__option {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.choice__option--on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.google-button {
+  min-height: 44px;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}

@@ -1,0 +1,38 @@
+/*
+ * Hairlines on the very edges of the screen, above everything (the tab bar and the logging
+ * screen included) but taking no space and catching no taps, so nothing moves.
+ *
+ * Drawn with `--accent-ink`, not `--accent`: a line is ink, and yellow ink would vanish on the
+ * light scheme's pale surface (see "Design" in docs/design.md).
+ */
+.line {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  height: 3px;
+  background: color-mix(in srgb, var(--accent-ink) 15%, transparent);
+  pointer-events: none;
+}
+
+.line--top {
+  top: 0;
+}
+
+.line--bottom {
+  bottom: 0;
+}
+
+.line__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent-ink);
+  /* Earning slides the line along instead of jumping; a level-up starts it over. */
+  transition: width 0.6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line__fill {
+    transition: none;
+  }
+}

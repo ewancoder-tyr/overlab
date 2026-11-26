@@ -1,0 +1,55 @@
+<!-- The number and the gauge are drawn for the eye; a screen reader gets one sentence. -->
+<div class="summary" role="img" [attr.aria-label]="label()">
+  <p class="summary__numbers" aria-hidden="true">
+    <strong class="summary__number">{{ minutes() }}</strong>
+    <span class="summary__goal">/ {{ goal() }} {{ t().min }}</span>
+  </p>
+  @if (reached()) {
+    <span class="eyebrow summary__reached" aria-hidden="true">{{ t().reached }}</span>
+  }
+</div>
+
+<span class="tube" aria-hidden="true">
+  @for (row of rows(); track row.key) {
+    <span
+      class="tube__segment"
+      [style.width.%]="row.widthPercent"
+      [style.--shade]="row.shade"
+    ></span>
+  }
+</span>
+
+@if (empty()) {
+  <p class="muted">{{ t().empty(windowDays()) }}</p>
+} @else {
+  <ul class="breakdown">
+    @for (row of rows(); track row.key) {
+      <li>
+        @if (row.exerciseId; as id) {
+          <a
+            class="breakdown__row breakdown__row--link"
+            [routerLink]="['/exercises', id, 'stats']"
+            [attr.aria-label]="t().statisticsFor(row.name) + ': ' + row.minutes + ' ' + t().min"
+          >
+            <span class="swatch" [style.--shade]="row.shade" aria-hidden="true"></span>
+            <span class="breakdown__name">{{ row.name }}</span>
+            <span class="breakdown__value">{{ row.minutes }} {{ t().min }}</span>
+          </a>
+        } @else {
+          <span class="breakdown__row">
+            <span class="swatch" [style.--shade]="row.shade" aria-hidden="true"></span>
+            <span class="breakdown__name">{{ row.name }}</span>
+            <span class="breakdown__value">{{ row.minutes }} {{ t().min }}</span>
+          </span>
+        }
+      </li>
+    }
+  </ul>
+}
+
+@if (calories(); as calories) {
+  <p class="muted side">{{ calories }}</p>
+}
+@if (untimed(); as untimed) {
+  <p class="muted side">{{ untimed }}</p>
+}

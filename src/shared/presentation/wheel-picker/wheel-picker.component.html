@@ -1,0 +1,24 @@
+<!--
+  `role="slider"` with the value attributes is what tells a screen reader "Incline, 6": the
+  rows themselves are hidden from it, being only the picture of the wheel.
+-->
+<div
+  #wheel
+  class="wheel"
+  role="slider"
+  tabindex="0"
+  aria-orientation="vertical"
+  [attr.aria-label]="label()"
+  [attr.aria-valuemin]="values()[0]"
+  [attr.aria-valuemax]="values().at(-1)"
+  [attr.aria-valuenow]="value()"
+  [attr.aria-valuetext]="valueText()"
+  (scroll)="scrolled()"
+  (keydown)="key($event)"
+>
+  @for (item of items(); track item.value) {
+    <span class="wheel__row" [class.wheel__row--picked]="$index === index()" aria-hidden="true">
+      {{ item.text }}
+    </span>
+  }
+</div>

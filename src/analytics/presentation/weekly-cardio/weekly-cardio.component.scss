@@ -1,0 +1,116 @@
+:host {
+  /* The gauge colour: brand yellow until the goal is reached, then the "within target" green. */
+  --fill: var(--accent);
+  /* The same colour as text: the accent's ink while yellow (black in light), else the fill. */
+  --fill-ink: var(--accent-ink);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+:host(.reached) {
+  --fill: var(--success);
+  --fill-ink: var(--fill);
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.summary__numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.summary__number {
+  color: var(--fill-ink);
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+
+.summary__goal {
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.summary__reached {
+  color: var(--fill-ink);
+}
+
+/*
+ * The test tube, as in the weekly volume gauges, but taller and with the fill split into one
+ * segment per exercise. The flex gap between segments shows the dark track: the thin dark gaps.
+ */
+.tube {
+  display: flex;
+  gap: 2px;
+  height: 1.125rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-raised);
+}
+
+.tube__segment {
+  flex: none;
+  background: color-mix(in srgb, var(--fill) var(--shade), var(--surface-raised));
+}
+
+/* The fill ends rounded, like the volume gauges' drop of liquid. */
+.tube__segment:last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breakdown__row {
+  display: grid;
+  grid-template-columns: 0.875rem 1fr auto;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fill) var(--shade), var(--surface-raised));
+}
+
+.breakdown__name {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown__value {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.side {
+  margin: 0;
+}

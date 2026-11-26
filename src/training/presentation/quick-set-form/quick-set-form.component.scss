@@ -1,0 +1,77 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/*
+ * The chips always share one row: a second row would cost the fixed entry panel a whole line
+ * of the screen's height. They are sized to fit a 360px phone in both languages. On anything
+ * narrower the row scrolls sideways instead of wrapping.
+ */
+.options {
+  display: flex;
+  /* `safe`: centred while they fit, but from the left edge once they overflow, so that no
+     chip is pushed off the left side where scrolling could not reach it. */
+  justify-content: safe center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  /* The scrollbar would take height too; the cut-off chip is hint enough. */
+  scrollbar-width: none;
+}
+
+/* A small pill for the occasional extras, kept out of the way of the two main numbers. */
+.chip {
+  /* Chips keep their width and their words on one line; the row scrolls if it must. */
+  flex: none;
+  min-height: 2.75rem;
+  padding: 0 0.4375rem;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.chip--on {
+  border-color: transparent;
+  background: var(--danger);
+  color: var(--on-accent);
+}
+
+.chip--light-on {
+  border-color: transparent;
+  background: var(--light-dot);
+  color: var(--on-accent);
+}
+
+/* Easy: the light chip's mint as an outline only, as its mark on a tile is a hollow ring. */
+.chip--easy-on {
+  border-color: var(--light-dot);
+  color: var(--light-dot);
+}
+
+/* A mode of the screen rather than a mark on one set: drawn with the accent, like a choice. */
+.chip--standalone-on {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+  text-align: center;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}

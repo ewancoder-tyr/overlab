@@ -1,0 +1,76 @@
+<section aria-labelledby="cloud-heading">
+  <h3 id="cloud-heading">{{ t().heading }}</h3>
+
+  @if (account(); as account) {
+    <p class="muted">
+      {{ t().signedInAs }} <strong class="email">{{ account.email }}</strong>
+    </p>
+  } @else {
+    <p class="muted">{{ t().intro }}</p>
+  }
+
+  <!-- `@let` names the value once; checking `kind` then narrows its type, as in TypeScript. -->
+  @let current = status();
+  @if (current.kind === 'backed-up') {
+    <p class="status status--good" role="status">
+      {{ t().backedUp }}
+      @if (current.at; as at) {
+        <span class="muted">{{ t().lastSync }} {{ at | localDate: 'HH:mm' }}</span>
+      }
+    </p>
+  } @else if (current.kind === 'waiting') {
+    <p class="status" [class.status--warning]="current.reason !== 'syncing'" role="status">
+      @switch (current.reason) {
+        @case ('syncing') {
+          {{ t().syncing(current.pending) }}
+        }
+        @case ('offline') {
+          {{ t().offline(current.pending) }}
+        }
+        @case ('expired') {
+          {{ t().expired(current.pending) }}
+        }
+        @case ('failed') {
+          {{ t().failed(current.pending) }}
+        }
+        @case ('paused') {
+          {{ t().paused(current.pending) }}
+        }
+      }
+    </p>
+  }
+
+  @if (awaitingUpload(); as waiting) {
+    <p class="warning" role="alert">{{ t().uploadWarning(eventCount(), waiting.email) }}</p>
+    <div class="actions">
+      <button
+        type="button"
+        class="button button--primary"
+        [disabled]="busy()"
+        (click)="confirmUpload()"
+      >
+        {{ t().uploadConfirm }}
+      </button>
+      <button type="button" class="button" (click)="cancelUpload()">{{ t().cancel }}</button>
+    </div>
+  } @else if (showsButton()) {
+    <!-- Google draws its own button in here (see GoogleIdentitySignIn). -->
+    <div #googleButton class="google-button"></div>
+    @if (googleUnavailable()) {
+      <p class="muted">{{ t().noGoogle }}</p>
+    }
+  }
+
+  @if (error(); as error) {
+    <p class="error" role="alert">{{ error | localize }}</p>
+  }
+
+  @if (account()) {
+    <div class="actions">
+      <button type="button" class="button" [disabled]="busy()" (click)="signOut()">
+        {{ t().signOut }}
+      </button>
+    </div>
+    <p class="muted note">{{ t().signOutNote }}</p>
+  }
+</section>

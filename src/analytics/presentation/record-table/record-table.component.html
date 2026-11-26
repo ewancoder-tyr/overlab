@@ -1,0 +1,26 @@
+@if (shown().length > 0) {
+  <table class="records">
+    <!-- The headers are for screen readers; on screen the columns speak for themselves. -->
+    <thead class="visually-hidden">
+      <tr>
+        <th scope="col">{{ t().load }}</th>
+        <th scope="col">{{ t().reps }}</th>
+        <th scope="col">{{ t().date }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of shown(); track row.key) {
+        <tr class="records__row">
+          <td class="records__load">{{ row.load }}</td>
+          <td class="records__reps">× {{ row.reps }}</td>
+          <td class="records__date">{{ row.occurredAt | localDate: 'd MMM y' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (heaviest(); as heaviest) {
+    <p class="caption">{{ t().toBeat(heaviest) }}</p>
+  }
+} @else {
+  <p class="caption">{{ t().empty }}</p>
+}

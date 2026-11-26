@@ -1,0 +1,19 @@
+@if (set().kind === 'warmup') {
+  <span class="badge badge--muted">{{ t().warmUp }}</span>
+}
+@for (group of groups(); track $index) {
+  <span class="chip">
+    {{ group.text }}
+    @if (group.technique; as technique) {
+      <span class="chip__tag">{{ technique }}</span>
+    }
+    @if (group.otherExercise; as otherExercise) {
+      <span class="chip__tag">{{ otherExercise }}</span>
+    }
+  </span>
+}
+@if (effort(); as effort) {
+  <span class="badge" [attr.aria-label]="effort.label" [title]="effort.label">{{
+    effort.short
+  }}</span>
+}

@@ -1,0 +1,262 @@
+/*
+ * Everything here floats over the page: fixed, taking no space and catching no taps, so the page
+ * underneath never moves and can be used straight through the animation.
+ *
+ * Yellow is only ever a filled block with `--on-accent` on it, which reads the same in the dark
+ * and the light scheme (see "Design" in docs/design.md).
+ */
+
+.toasts {
+  position: fixed;
+  inset: auto 0 34vh;
+  z-index: 50;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+/* All toasts share one grid cell, so a quick second set overlaps the first instead of stacking. */
+.toast {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  animation: rise 1.8s ease-out forwards;
+}
+
+.toast__xp {
+  padding: 0.25rem 0.875rem;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 45%);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.toast__line {
+  max-width: 80vw;
+  overflow: hidden;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* With a bonus the number is bigger and the toast stays longer (its own, slower keyframes). */
+.toast--bonus {
+  animation-name: rise-bonus;
+  animation-duration: 3s;
+}
+
+.toast--bonus .toast__xp {
+  font-size: 2.75rem;
+}
+
+/* One line per bonus, each named, so it is clear what the extra experience was for. */
+.toast__bonus {
+  padding: 0.125rem 0.75rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 40%);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toast__bonus strong {
+  color: var(--accent-ink);
+}
+
+/* Records in the colours of their marks on the tiles: purple for weight, green for reps. */
+.toast__bonus--weight strong {
+  color: var(--record-weight);
+}
+
+.toast__bonus--reps strong {
+  color: var(--record-reps);
+}
+
+/* An exercise that levelled up says so in the accent's ink, a step louder than a name. */
+.toast--leveled .toast__line {
+  color: var(--accent-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.12);
+  }
+  25% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4rem) scale(1);
+  }
+}
+
+@keyframes rise-bonus {
+  0% {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0) scale(1.2);
+  }
+  18% {
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-1rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4rem) scale(1);
+  }
+}
+
+/* The level-up: a dimmed screen, yellow rays turning behind a badge that slams in. */
+.burst {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgb(0 0 0 / 55%);
+  pointer-events: none;
+  animation: fade 2.8s ease-in-out forwards;
+}
+
+.burst__rays {
+  position: absolute;
+  width: 160vmax;
+  height: 160vmax;
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--accent) 45%, transparent) 0deg 8deg,
+    transparent 8deg 24deg
+  );
+  /* Fade the rays out towards the edges, so they glow from the badge. */
+  mask-image: radial-gradient(circle, black 0%, transparent 45%);
+  animation: spin 2.8s linear forwards;
+}
+
+.burst__badge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 2rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0.5rem 2.5rem rgb(0 0 0 / 60%);
+  font-family: var(--font-display);
+  animation: slam 2.8s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+
+.burst__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.burst__number {
+  font-size: 6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+/* The new title under the number, ruled off from it like a specimen label. */
+.burst__rank {
+  max-width: 16rem;
+  margin-top: 0.375rem;
+  padding-top: 0.375rem;
+  border-top: 2px solid var(--on-accent);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg) scale(0.6);
+  }
+  to {
+    transform: rotate(60deg) scale(1);
+  }
+}
+
+@keyframes slam {
+  0% {
+    transform: scale(2.4) rotate(-8deg);
+  }
+  18% {
+    transform: scale(1) rotate(-3deg);
+  }
+  85% {
+    transform: scale(1) rotate(-3deg);
+  }
+  100% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+}
+
+/* Without motion: the same messages, only fading in and out in place. */
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation-name: fade;
+  }
+
+  .burst__rays {
+    animation: none;
+  }
+
+  .burst__badge {
+    animation: none;
+    transform: rotate(-3deg);
+  }
+}

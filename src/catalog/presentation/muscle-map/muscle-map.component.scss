@@ -1,0 +1,52 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 12.5rem) 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.map {
+  width: 100%;
+  height: auto;
+}
+
+.shape {
+  fill: var(--surface-raised);
+  /* A thin outline in the card colour separates neighbouring regions. */
+  stroke: var(--surface);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.shape--active {
+  fill: var(--accent);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.legend__item {
+  display: grid;
+  grid-template-columns: 0.75rem 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.legend__swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.1875rem;
+  background: var(--accent);
+}
+
+.legend__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}

@@ -1,0 +1,105 @@
+.top {
+  display: flex;
+  align-items: center;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0.875rem 1.125rem 0.25rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand__mark {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: var(--accent-ink);
+}
+
+.brand__name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand__lab {
+  color: var(--accent-ink);
+}
+
+.main {
+  max-width: 40rem;
+  margin: 0 auto;
+  /* Bottom padding keeps the last card clear of the fixed tab bar. */
+  padding: 0.75rem 0.75rem calc(var(--tabs-height) + env(safe-area-inset-bottom) + 1rem);
+}
+
+.tabs {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: calc(var(--tabs-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--border);
+  background: var(--tab-bar);
+  backdrop-filter: blur(12px);
+  /* The browser starts no gesture (scroll, pinch, double-tap zoom) from a touch on the bar.
+     Quick taps on neighbouring tabs looked like those gestures, and the browser cancelled them. */
+  touch-action: none;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.125rem;
+  /* A grid item will not shrink below its content otherwise; a long label then pushes into
+     its neighbour instead of staying inside its fifth of the bar. */
+  min-width: 0;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  /* Tight enough for five tabs to fit a narrow phone. */
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor;
+  }
+}
+
+.tab--active {
+  color: var(--accent-ink);
+}
+
+/* A one-line message above the page with one action: an update is ready, a test date is on. */
+.notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border: 1px solid var(--accent-ink);
+  border-radius: var(--radius);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+/* Orange is the warning colour. */
+.notice--warning {
+  border-color: var(--warning);
+  color: var(--warning);
+}

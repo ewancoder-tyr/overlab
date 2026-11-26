@@ -1,0 +1,117 @@
+/* The same visual language as the lifting chart (see exercise-progress). */
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.headline {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.headline__number {
+  margin-right: 0.25rem;
+  color: var(--text);
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  /* Let the page scroll vertically when a swipe starts on the chart. */
+  touch-action: pan-y;
+}
+
+.axis-label {
+  fill: var(--text-muted);
+  font-size: 9px;
+}
+
+/* Values written on the chart use the normal text colour, not the series colour. */
+.value {
+  fill: var(--text);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.caption {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.highlight {
+  fill: var(--surface-raised);
+}
+
+/* Every chart is one series, so they all share the data colour: colour carries no meaning. */
+.line {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dot {
+  fill: var(--accent-ink);
+  /* A ring in the card colour keeps overlapping dots and the line visually separate. */
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+/* Verdicts are states, so they use the status colours, always together with a glyph or text. */
+.verdict {
+  font-size: 9px;
+  fill: var(--text-muted);
+}
+
+/* Matching the session before is the aim of cardio, so it is green like beating it. */
+.verdict--up,
+.verdict--same {
+  fill: var(--success);
+  color: var(--success);
+}
+
+.verdict--down {
+  fill: var(--danger);
+  color: var(--danger);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.detail__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.625rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.detail__date {
+  color: var(--text-muted);
+}
+
+.detail__value {
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail__verdict {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
