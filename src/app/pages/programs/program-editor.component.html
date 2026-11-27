@@ -1,0 +1,279 @@
+@if (program(); as program) {
+  <section class="card" aria-labelledby="editor-heading">
+    <h2 id="editor-heading">{{ heading() }}</h2>
+    <label class="field">
+      <span class="field__label">{{ t().name }}</span>
+      <input
+        #name
+        class="input"
+        type="text"
+        [maxLength]="maxNameLength"
+        [placeholder]="program.solo ? t().soloNamePlaceholder : t().namePlaceholder"
+        [value]="program.name"
+        (input)="setName(name.value)"
+      />
+    </label>
+    <label class="check">
+      <input #solo type="checkbox" [checked]="program.solo" (change)="setSolo(solo.checked)" />
+      <span>
+        {{ t().solo }}
+        <span class="check__detail muted">{{ t().soloDetail }}</span>
+      </span>
+    </label>
+  </section>
+
+  <section class="card" aria-labelledby="exercises-heading">
+    <h2 id="exercises-heading">{{ t().exercises }}</h2>
+
+    <!-- A solo program has one day, so there is nothing to switch between. -->
+    @if (!program.solo) {
+      <div class="tabs" role="group" [attr.aria-label]="t().programDays">
+        @for (day of dayTabs(); track day.id) {
+          <button
+            type="button"
+            class="tab"
+            [class.tab--on]="day.on"
+            [attr.aria-pressed]="day.on"
+            (click)="showDay(day.id)"
+          >
+            {{ day.title }}
+          </button>
+        }
+        @if (canAddDay()) {
+          <button
+            type="button"
+            class="tab tab--add"
+            [attr.aria-label]="t().addDay"
+            (click)="addDay()"
+          >
+            +
+          </button>
+        }
+      </div>
+    }
+
+    @if (exercises().length > 0) {
+      <!-- An ordered list: the order is the point. -->
+      <ol class="plain-list">
+        @for (exercise of exercises(); track exercise.id; let index = $index) {
+          <li class="exercise">
+            <span class="exercise__name">{{ exercise.name }}</span>
+            <button
+              type="button"
+              class="icon-button"
+              [disabled]="$first"
+              [attr.aria-label]="t().up(exercise.name)"
+              (click)="move(index, -1)"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="icon-button"
+              [disabled]="$last"
+              [attr.aria-label]="t().down(exercise.name)"
+              (click)="move(index, 1)"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="icon-button"
+              [attr.aria-label]="t().remove(exercise.name)"
+              (click)="removeExercise(exercise.id)"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+              </svg>
+            </button>
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="muted">{{ t().emptyDay }}</p>
+    }
+
+    @if (!candidates().full) {
+      <label class="field">
+        <span class="field__label">{{ t().addExercise }}</span>
+        <!--
+          Choosing an exercise adds it at once. The list then re-renders without that exercise,
+          which puts the menu back on its first, empty option.
+        -->
+        <select #pick class="input" (change)="addExercise(pick.value); pick.value = ''">
+          <option value="">{{ t().chooseExercise }}</option>
+          @if (candidates().favorites.length > 0) {
+            <optgroup [label]="t().favorites">
+              @for (exercise of candidates().favorites; track exercise.id) {
+                <option [value]="exercise.id">{{ exercise.name }}</option>
+              }
+            </optgroup>
+          }
+          <optgroup [label]="t().others">
+            @for (exercise of candidates().others; track exercise.id) {
+              <option [value]="exercise.id">{{ exercise.name }}</option>
+            }
+          </optgroup>
+        </select>
+      </label>
+    }
+
+    @if (!program.solo && program.days.length > 1) {
+      <div class="actions">
+        <button type="button" class="button button--ghost" (click)="removeDay()">
+          {{ t().removeDay }}
+        </button>
+      </div>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="days-heading">
+    <h2 id="days-heading">{{ t().days }}</h2>
+    <div class="choice" role="group" [attr.aria-label]="t().days">
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="program.schedule.kind === 'weekdays'"
+        [attr.aria-pressed]="program.schedule.kind === 'weekdays'"
+        (click)="chooseWeekdays()"
+      >
+        {{ t().daysOfWeek }}
+      </button>
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="program.schedule.kind === 'interval'"
+        [attr.aria-pressed]="program.schedule.kind === 'interval'"
+        (click)="chooseInterval()"
+      >
+        {{ t().everyFewDays }}
+      </button>
+    </div>
+
+    @if (program.schedule.kind === 'weekdays') {
+      <div class="days" role="group" [attr.aria-label]="t().daysOfWeek">
+        @for (day of weekdays(); track day.id) {
+          <button
+            type="button"
+            class="day"
+            [class.day--on]="day.on"
+            [attr.aria-pressed]="day.on"
+            [attr.aria-label]="day.name"
+            (click)="toggleDay(day.id)"
+          >
+            {{ day.short }}
+          </button>
+        }
+      </div>
+    } @else {
+      <olab-stepper
+        [label]="t().every"
+        [unit]="t().dayUnit(program.schedule.everyDays)"
+        [min]="1"
+        [value]="program.schedule.everyDays"
+        (valueChange)="setEveryDays($event)"
+      />
+      <p class="muted">
+        {{ t().countedFrom }} {{ program.schedule.startDate | localDate: 'EEE d MMM'
+        }}{{ t().restart }}
+      </p>
+      <div class="choice" role="group" [attr.aria-label]="t().nextDay">
+        <button
+          type="button"
+          class="choice__option"
+          [class.choice__option--on]="nextOffset() === 0"
+          [attr.aria-pressed]="nextOffset() === 0"
+          (click)="startCycle(0)"
+        >
+          {{ t().today }}
+        </button>
+        <button
+          type="button"
+          class="choice__option"
+          [class.choice__option--on]="nextOffset() === 1"
+          [attr.aria-pressed]="nextOffset() === 1"
+          (click)="startCycle(1)"
+        >
+          {{ t().tomorrow }}
+        </button>
+      </div>
+      <div>
+        <span class="eyebrow">{{ t().nextDays }}</span>
+        <ul class="upcoming">
+          @for (day of upcoming(); track day) {
+            <li class="upcoming__day">{{ day | localDate: 'EEE d MMM' }}</li>
+          }
+        </ul>
+      </div>
+      <p class="muted">{{ t().skipNote }}</p>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="reminder-heading">
+    <h2 id="reminder-heading">{{ t().reminder }}</h2>
+    <div class="choice choice--three" role="group" [attr.aria-label]="t().reminder">
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="program.reminder.kind === 'default'"
+        [attr.aria-pressed]="program.reminder.kind === 'default'"
+        (click)="setReminder('default')"
+      >
+        {{ t().reminderDefault(defaultTime()) }}
+      </button>
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="program.reminder.kind === 'at'"
+        [attr.aria-pressed]="program.reminder.kind === 'at'"
+        (click)="setReminder('at')"
+      >
+        {{ t().reminderOwn }}
+      </button>
+      <button
+        type="button"
+        class="choice__option"
+        [class.choice__option--on]="program.reminder.kind === 'off'"
+        [attr.aria-pressed]="program.reminder.kind === 'off'"
+        (click)="setReminder('off')"
+      >
+        {{ t().reminderOff }}
+      </button>
+    </div>
+    @if (program.reminder.kind === 'at') {
+      <label class="field">
+        <span class="field__label">{{ t().remindAt }}</span>
+        <input
+          #time
+          class="input time"
+          type="time"
+          [value]="ownTime()"
+          (change)="setReminderTime(time.value)"
+        />
+      </label>
+    }
+  </section>
+
+  <section class="card">
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message | localize }}</p>
+    }
+    <button type="button" class="button button--primary" (click)="save()">{{ t().save }}</button>
+    @if (exists()) {
+      <olab-slide-confirm [label]="t().delete" (confirmed)="remove()" />
+    }
+  </section>
+} @else {
+  <section class="card">
+    <p class="muted">{{ t().missing }}</p>
+  </section>
+}
