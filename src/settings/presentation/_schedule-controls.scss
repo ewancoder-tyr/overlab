@@ -1,8 +1,8 @@
 /*
  * The controls a schedule is edited with: the two-option pill, the seven weekday chips, the list
- * of upcoming days and the time field. Shared by the Settings page (gym days) and the solo
- * reminder editor, which ask the same questions. Angular scopes styles to one component, so each
- * of them pulls this file in with `@use`.
+ * of upcoming days and the time field. Shared by the program editor and the Settings page (the
+ * time field). Angular scopes styles to one component, so each of them pulls this file in with
+ * `@use`.
  */
 
 /* Two options side by side that read as one control: pick one. */

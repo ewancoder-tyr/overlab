@@ -61,112 +61,6 @@
   </fieldset>
 </section>
 
-<section class="card" aria-labelledby="days-heading">
-  <h2 id="days-heading">{{ t().gymDays }}</h2>
-
-  <div class="choice" role="group" [attr.aria-label]="t().howPlanned">
-    <button
-      type="button"
-      class="choice__option"
-      [class.choice__option--on]="schedule()?.kind === 'weekdays'"
-      [attr.aria-pressed]="schedule()?.kind === 'weekdays'"
-      (click)="chooseWeekdays()"
-    >
-      {{ t().daysOfWeek }}
-    </button>
-    <button
-      type="button"
-      class="choice__option"
-      [class.choice__option--on]="schedule()?.kind === 'interval'"
-      [attr.aria-pressed]="schedule()?.kind === 'interval'"
-      (click)="chooseInterval()"
-    >
-      {{ t().everyFewDays }}
-    </button>
-  </div>
-
-  @if (schedule(); as schedule) {
-    @if (schedule.kind === 'weekdays') {
-      <div class="days" role="group" [attr.aria-label]="t().daysOfWeek">
-        @for (day of weekdays(); track day.id) {
-          <button
-            type="button"
-            class="day"
-            [class.day--on]="day.on"
-            [attr.aria-pressed]="day.on"
-            [attr.aria-label]="day.name"
-            (click)="toggleDay(day.id)"
-          >
-            {{ day.short }}
-          </button>
-        }
-      </div>
-    } @else {
-      <olab-stepper
-        [label]="t().trainEvery"
-        [unit]="t().days(schedule.everyDays)"
-        [min]="1"
-        [value]="schedule.everyDays"
-        (valueChange)="setEveryDays($event)"
-      />
-      <p class="muted">
-        {{ t().countedFrom }} {{ schedule.startDate | localDate: 'EEE d MMM' }}{{ t().restart }}
-      </p>
-      <div class="choice" role="group" [attr.aria-label]="t().nextGymDay">
-        <button
-          type="button"
-          class="choice__option"
-          [class.choice__option--on]="nextGymDayOffset() === 0"
-          [attr.aria-pressed]="nextGymDayOffset() === 0"
-          (click)="startCycle(0)"
-        >
-          {{ t().today }}
-        </button>
-        <button
-          type="button"
-          class="choice__option"
-          [class.choice__option--on]="nextGymDayOffset() === 1"
-          [attr.aria-pressed]="nextGymDayOffset() === 1"
-          (click)="startCycle(1)"
-        >
-          {{ t().tomorrow }}
-        </button>
-      </div>
-      <!-- Only here: with fixed weekdays the lit chips already show which days they are. -->
-      <div>
-        <span class="eyebrow">{{ t().nextGymDays }}</span>
-        <ul class="upcoming">
-          @for (day of upcoming(); track day) {
-            <li class="upcoming__day">{{ day | localDate: 'EEE d MMM' }}</li>
-          }
-        </ul>
-      </div>
-    }
-  }
-
-  @if (error(); as message) {
-    <p class="error" role="alert">{{ message | localize }}</p>
-  }
-</section>
-
-<section class="card" aria-labelledby="rotation-heading">
-  <h2 id="rotation-heading">{{ t().rotation }}</h2>
-  <olab-stepper
-    [label]="t().rotateBetween"
-    [unit]="t().workouts(rotation())"
-    [min]="1"
-    [value]="rotation()"
-    (valueChange)="setRotation($event)"
-  />
-  <p class="muted">
-    @if (rotation() === 1) {
-      {{ t().sameEveryTime }}
-    } @else {
-      {{ t().inTurn(rotation()) }}
-    }
-  </p>
-</section>
-
 <section class="card" aria-labelledby="reminders-heading">
   <h2 id="reminders-heading">{{ t().reminders }}</h2>
   <p class="muted">{{ t().remindersIntro }}</p>
@@ -182,65 +76,13 @@
     />
   </label>
 
-  <!--
-    Solo reminders: one alarm per exercise, each with its own days and time. A row opens its
-    editor in place, one at a time.
-  -->
-  <div class="solo">
-    <h3 class="eyebrow">{{ t().soloReminders }}</h3>
-    <p class="muted">{{ t().soloIntro }}</p>
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message | localize }}</p>
+  }
 
-    @if (soloReminders().length > 0) {
-      <ul class="solo__list">
-        @for (reminder of soloReminders(); track reminder.exerciseId) {
-          <li class="solo__item">
-            <button
-              type="button"
-              class="solo__row"
-              [attr.aria-expanded]="openSolo() === reminder.exerciseId"
-              (click)="toggleSolo(reminder.exerciseId)"
-            >
-              <span class="solo__name">{{ reminder.name }}</span>
-              <span class="solo__summary">{{ reminder.summary }}</span>
-            </button>
-            @if (openSolo() === reminder.exerciseId) {
-              <olab-solo-reminder-editor class="solo__editor" [exerciseId]="reminder.exerciseId" />
-            }
-          </li>
-        }
-      </ul>
-    }
-
-    @if (soloFull()) {
-      <p class="muted">{{ t().soloFull(maxSolo) }}</p>
-    } @else if (soloCandidates().habits.length + soloCandidates().favorites.length === 0) {
-      <p class="muted">{{ t().noSoloCandidates }}</p>
-    } @else {
-      <label class="field">
-        <span class="field__label">{{ t().addSolo }}</span>
-        <!--
-          Choosing an exercise adds its reminder at once. The list then re-renders without that
-          exercise, which puts the menu back on its first, empty option.
-        -->
-        <select #pick class="input" (change)="addSolo(pick.value); pick.value = ''">
-          <option value="">{{ t().chooseExercise }}</option>
-          @if (soloCandidates().habits.length > 0) {
-            <optgroup [label]="t().soloHabits">
-              @for (exercise of soloCandidates().habits; track exercise.id) {
-                <option [value]="exercise.id">{{ exercise.name }}</option>
-              }
-            </optgroup>
-          }
-          @if (soloCandidates().favorites.length > 0) {
-            <optgroup [label]="t().favorites">
-              @for (exercise of soloCandidates().favorites; track exercise.id) {
-                <option [value]="exercise.id">{{ exercise.name }}</option>
-              }
-            </optgroup>
-          }
-        </select>
-      </label>
-    }
+  <!-- Which days, and a program's own time or none, are set on the program itself. -->
+  <div class="actions">
+    <a class="button" routerLink="/programs">{{ t().programs }}</a>
   </div>
 
   @switch (reminderState()) {

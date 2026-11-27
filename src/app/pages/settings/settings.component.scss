@@ -29,65 +29,6 @@
   gap: 0.75rem;
 }
 
-/* Solo reminders: a group of its own inside the Reminders card. */
-.solo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding-top: 0.875rem;
-  border-top: 1px solid var(--border);
-}
-
-.solo__list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.solo__item {
-  display: flex;
-  flex-direction: column;
-  /* An outline, not a raised fill: the day chips inside the editor are raised themselves. */
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-}
-
-/* The whole row is the button: the name on the left, its days and time on the right. */
-.solo__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.875rem;
-  border: 0;
-  border-radius: 0.75rem;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.solo__name {
-  font-weight: 600;
-}
-
-.solo__summary {
-  flex: none;
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  font-weight: 600;
-}
-
-.solo__editor {
-  padding: 0.25rem 0.875rem 0.875rem;
-}
-
 .on {
   display: flex;
   align-items: center;

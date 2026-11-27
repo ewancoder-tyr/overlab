@@ -3,17 +3,8 @@ import { RouterLink } from '@angular/router';
 import { GamificationService } from '@gamification/application/gamification.service';
 import { LeaderboardSwitchComponent } from '@leaderboard/presentation/leaderboard-switch/leaderboard-switch.component';
 import { CatalogService } from '@catalog/application/catalog.service';
-import { Exercise, ExerciseId, isCardio } from '@catalog/domain/exercise';
 import { RemindersService } from '@settings/application/reminders.service';
 import { SettingsService } from '@settings/application/settings.service';
-import {
-    Schedule,
-    MAX_EVERY_DAYS,
-    Weekday,
-    addDays,
-    toLocalDate,
-    upcomingDays,
-} from '@shared/domain/schedule';
 import {
     CARDIO_GOAL_STEP_MINUTES,
     LIGHT_SET_PERCENT_STEP,
@@ -25,7 +16,6 @@ import {
     MAX_STALL_THRESHOLD,
     MAX_TARGET_WINDOW_DAYS,
     MAX_VOLUME_TARGET_SETS,
-    MAX_WORKOUT_ROTATION,
     MIN_CARDIO_GOAL_MINUTES,
     MIN_STALL_THRESHOLD,
     MIN_TARGET_WINDOW_DAYS,
@@ -33,9 +23,6 @@ import {
     REST_ALERT_STEP_SECONDS,
     STALL_INVOLVEMENT_PERCENT_STEP,
 } from '@settings/domain/preferences';
-import { MAX_SOLO_REMINDERS, defaultSoloReminder } from '@settings/domain/solo-reminder';
-import { WEEKDAYS, describeSchedule } from '@settings/presentation/schedule-wording';
-import { SoloReminderEditorComponent } from '@settings/presentation/solo-reminder-editor/solo-reminder-editor.component';
 import { TrainingService } from '@training/application/training.service';
 import { Clock } from '@shared/application/clock.service';
 import { Locale } from '@shared/application/locale.service';
@@ -107,25 +94,7 @@ const TEXT = {
         cardioGoalIntro: (days: number) =>
             `Minutes of cardio in ${days} ${plural('en', days, { one: 'day', other: 'days' })}, all exercises added up.`,
         min: 'min',
-        gymDays: 'Gym days',
-        howPlanned: 'How gym days are planned',
-        daysOfWeek: 'Days of the week',
-        everyFewDays: 'Every few days',
-        trainEvery: 'Train every',
         days: (count: number) => plural('en', count, { one: 'day', other: 'days' }),
-        countedFrom: 'Counted from',
-        restart: '. Restart the count so that the next gym day is:',
-        nextGymDay: 'Next gym day',
-        today: 'Today',
-        tomorrow: 'Tomorrow',
-        nextGymDays: 'Next gym days',
-        rotation: 'Workout rotation',
-        rotateBetween: 'Rotate between',
-        workouts: (count: number) => plural('en', count, { one: 'workout', other: 'workouts' }),
-        sameEveryTime:
-            'The same workout every time: the plan is what you did in your last workout.',
-        inTurn: (count: number) =>
-            `${count} workouts in turn: the plan is what you did ${count} workouts ago.`,
         restAlert: 'Rest alert',
         restAlertHint:
             'On the screen of the exercise you just did, the rest flashes yellow and the phone buzzes once at this time. It keeps counting.',
@@ -145,24 +114,15 @@ const TEXT = {
             'On the Week page, a stalled exercise marks the muscle groups it trains by more than this. At 50%, a stalled bench press marks chest but not triceps.',
         reminders: 'Reminders',
         remindersIntro:
-            'A roast on each gym day, on this device, quoting your latest numbers on the exercises planned for that workout. The reminder server gets only your gym days, this time, your language and those numbers.',
-        remindAt: 'On gym days, remind me at',
-        soloReminders: 'Solo reminders',
-        soloIntro:
-            'An alarm for one exercise you do outside workouts, like push-ups every morning, on its own days and at its own time. It only rings: nothing is tracked and nothing counts as missed. The reminder server also gets that exercise, its days and time, and your latest solo number on it.',
-        addSolo: 'Add a reminder for',
-        chooseExercise: 'Choose an exercise…',
-        soloHabits: 'Your solo exercises',
-        favorites: 'Favorites',
-        noSoloCandidates:
-            'Star an exercise in the Catalog, or log a solo set of it, and it will be offered here.',
-        soloFull: (max: number) => `That is all ${max}. Remove one to add another.`,
+            "A roast on each day of a program, on this device, quoting your latest numbers on the exercises of that day. Each program has its own days and can ring at its own time, or not at all. The reminder server gets only each program's name, days and time, your language and those numbers.",
+        remindAt: 'Unless a program has its own time, remind me at',
+        programs: 'Programs',
         unsupported:
             'Reminders are not available here. Install OverLab to your home screen from the browser menu, then open it from there.',
         blocked:
             "Notifications are blocked for OverLab. Allow them in the browser's site settings, then come back.",
         turnOn: 'Turn on reminders',
-        chooseDaysFirst: 'Choose your gym days or add a solo reminder first.',
+        chooseDaysFirst: 'Create a program with a reminder first.',
         onForDevice: 'On for this device',
         turnOff: 'Turn off',
         about: 'About',
@@ -206,25 +166,8 @@ const TEXT = {
         cardioGoalIntro: (days: number) =>
             `Минуты кардио за ${days} ${russianDays(days)}, все упражнения вместе.`,
         min: 'мин',
-        gymDays: 'Дни тренировок',
-        howPlanned: 'Как планируются дни тренировок',
-        daysOfWeek: 'Дни недели',
-        everyFewDays: 'Каждые N дней',
-        trainEvery: 'Тренироваться каждые',
-        days: russianDays,
-        countedFrom: 'Отсчёт от',
-        restart: '. Начните отсчёт заново, чтобы следующая тренировка была:',
-        nextGymDay: 'Следующая тренировка',
-        today: 'Сегодня',
-        tomorrow: 'Завтра',
-        nextGymDays: 'Ближайшие тренировки',
-        rotation: 'Чередование тренировок',
-        rotateBetween: 'Чередовать',
-        workouts: russianWorkouts,
-        sameEveryTime:
-            'Каждый раз одна и та же тренировка: план — то, что вы делали в прошлый раз.',
-        inTurn: (count: number) =>
-            `${count} ${russianWorkouts(count)} по очереди: план — то, что вы делали ${count} ${russianWorkouts(count)} назад.`,
+        days: (count: number) =>
+            plural('ru', count, { one: 'день', few: 'дня', many: 'дней', other: 'дня' }),
         restAlert: 'Сигнал отдыха',
         restAlertHint:
             'На экране упражнения, которое вы только что делали, отдых в это время мигает жёлтым, а телефон один раз вибрирует. Отсчёт продолжается.',
@@ -245,24 +188,15 @@ const TEXT = {
             'На странице «Неделя» упражнение в застое отмечает группы мышц, которые оно нагружает больше чем на столько. При 50% застой в жиме лёжа отмечает грудь, но не трицепс.',
         reminders: 'Напоминания',
         remindersIntro:
-            'Подколка в каждый день тренировки на этом устройстве, с вашими последними числами в упражнениях, запланированных на эту тренировку. Сервер напоминаний получает только дни тренировок, это время, язык и эти числа.',
-        remindAt: 'В дни тренировок напоминать в',
-        soloReminders: 'Соло-напоминания',
-        soloIntro:
-            'Будильник для одного упражнения вне тренировок, например отжиманий каждое утро, в свои дни и в своё время. Он только звонит: ничего не отслеживается и ничего не считается пропущенным. Сервер напоминаний дополнительно получает это упражнение, его дни и время и ваше последнее соло-число в нём.',
-        addSolo: 'Добавить напоминание для',
-        chooseExercise: 'Выберите упражнение…',
-        soloHabits: 'Ваши соло-упражнения',
-        favorites: 'Избранное',
-        noSoloCandidates:
-            'Отметьте упражнение звёздочкой в Каталоге или запишите соло-подход, и оно появится здесь.',
-        soloFull: (max: number) => `Это все ${max}. Уберите одно, чтобы добавить другое.`,
+            'Подкол в каждый день программы, на этом устройстве, с вашими последними цифрами по упражнениям этого дня. У каждой программы свои дни, и она может напоминать в своё время или не напоминать вовсе. Сервер напоминаний получает только название, дни и время каждой программы, ваш язык и эти цифры.',
+        remindAt: 'Если у программы нет своего времени, напоминать в',
+        programs: 'Программы',
         unsupported:
             'Здесь напоминания недоступны. Установите OverLab на главный экран через меню браузера и откройте его оттуда.',
         blocked:
             'Уведомления для OverLab заблокированы. Разрешите их в настройках сайта в браузере и возвращайтесь.',
         turnOn: 'Включить напоминания',
-        chooseDaysFirst: 'Сначала выберите дни тренировок или добавьте соло-напоминание.',
+        chooseDaysFirst: 'Сначала создайте программу с напоминанием.',
         onForDevice: 'Включены на этом устройстве',
         turnOff: 'Выключить',
         about: 'О приложении',
@@ -274,8 +208,7 @@ const TEXT = {
 } satisfies Localized<unknown>;
 
 /**
- * Settings: the everyday choices (language, look, training focus, gym days, rotation,
- * reminders, experience), the fine tuning under Advanced, and About.
+ * Settings: the everyday choices (language, look, training focus, reminders, experience), the fine tuning under Advanced, and About.
  *
  * There is no "Save" button. Every control records its change straight away as a
  * `PreferenceChanged` event, and the page re-renders from the resulting preferences.
@@ -288,7 +221,6 @@ const TEXT = {
         LocalDatePipe,
         LocalizePipe,
         RouterLink,
-        SoloReminderEditorComponent,
         StepperComponent,
     ],
     templateUrl: './settings.component.html',
@@ -353,62 +285,11 @@ export class SettingsComponent {
     protected readonly cardioGoalStep = CARDIO_GOAL_STEP_MINUTES;
     protected readonly formatCardioGoal = (minutes: number): string =>
         `${String(minutes)} ${this.t().min}`;
-    protected readonly schedule = computed(() => this.settings.preferences().gymSchedule);
     protected readonly reminderTime = computed(() => this.settings.preferences().reminderTime);
     protected readonly reminderState = this.reminders.state;
-    /** Whether there is anything to remind about: gym days, or at least one solo reminder. */
+    /** Whether there is anything to remind about: at least one program that rings. */
     protected readonly canRemind = this.reminders.hasPlan;
 
-    /**
-     * The solo reminders as rows: the exercise's name and its days and time in a few words.
-     * A reminder whose exercise the catalog does not know (from a newer version of the app) is
-     * still listed, under its id, so that it can be removed.
-     */
-    protected readonly soloReminders = computed(() => {
-        const catalog = this.catalog.catalog();
-        const language = this.language();
-        return this.settings.soloReminders().map((reminder) => ({
-            exerciseId: reminder.exerciseId,
-            // Settings keeps bare ids; here, where the page knows the catalog too, they meet.
-            name:
-                catalog.findExercise(reminder.exerciseId as ExerciseId)?.name[language] ??
-                reminder.exerciseId,
-            summary: `${describeSchedule(language, reminder.schedule)} · ${reminder.time}`,
-        }));
-    });
-
-    /** The solo reminder whose editor is open, by exercise id. One at a time. */
-    protected readonly openSolo = signal<string | undefined>(undefined);
-
-    protected readonly soloFull = computed(
-        () => this.settings.soloReminders().length >= MAX_SOLO_REMINDERS,
-    );
-    protected readonly maxSolo = MAX_SOLO_REMINDERS;
-
-    /**
-     * The exercises a solo reminder can be added for, in two groups: those already done solo
-     * lately (the Solo list of the Train page), then the other favorites. Not cardio, which is
-     * never logged as solo sets, and not those that have a reminder already.
-     */
-    protected readonly soloCandidates = computed(() => {
-        const taken = new Set(this.settings.soloReminders().map((other) => other.exerciseId));
-        const habits = this.training.standaloneHabits();
-        const favorites = this.catalog.favorites();
-        const free = this.catalog
-            .catalog()
-            .exercises.filter((exercise) => !isCardio(exercise) && !taken.has(exercise.id));
-        const option = (exercise: Exercise): { id: ExerciseId; name: string } => ({
-            id: exercise.id,
-            name: exercise.name[this.language()],
-        });
-        return {
-            habits: free.filter((exercise) => habits.has(exercise.id)).map(option),
-            favorites: free
-                .filter((exercise) => favorites.has(exercise.id) && !habits.has(exercise.id))
-                .map(option),
-        };
-    });
-    protected readonly rotation = computed(() => this.settings.preferences().workoutRotation);
     protected readonly restAlert = computed(() => this.settings.preferences().restAlertSeconds);
     protected readonly restAlertStep = REST_ALERT_STEP_SECONDS;
     protected readonly maxRestAlert = MAX_REST_ALERT_SECONDS;
@@ -441,39 +322,7 @@ export class SettingsComponent {
         return sessions === 0 ? undefined : this.t().sessions(sessions);
     });
 
-    private readonly today = computed(() => toLocalDate(this.clock.now()));
-
-    /** The seven day chips, each knowing whether it is switched on. */
-    protected readonly weekdays = computed(() => {
-        const schedule = this.schedule();
-        const chosen = schedule?.kind === 'weekdays' ? schedule.weekdays : [];
-        return WEEKDAYS[this.language()].map((day) => ({ ...day, on: chosen.includes(day.id) }));
-    });
-
-    /**
-     * Proof that the schedule means what the user thinks: the next few gym days, as dates. Shown
-     * only for "every few days"; with fixed weekdays the lit chips already say it.
-     */
-    protected readonly upcoming = computed(() => {
-        const schedule = this.schedule();
-        return schedule === undefined ? [] : upcomingDays(schedule, this.today(), 5);
-    });
-
-    /**
-     * Which of the Today / Tomorrow options describes the current schedule: 0 when today is a
-     * gym day, 1 when tomorrow is the next one, undefined when the next gym day is later still
-     * (then neither option is lit). It is read back from the schedule rather than remembered
-     * from the last tap, so it stays right as the days pass and after a reload.
-     */
-    protected readonly nextGymDayOffset = computed(() => {
-        const next = this.upcoming()[0];
-        if (next === this.today()) {
-            return 0;
-        }
-        return next === addDays(this.today(), 1) ? 1 : undefined;
-    });
-
-    /** The last problem with the schedule or time controls. */
+    /** The last problem with a control of this page. */
     protected readonly error = signal<LocalText | undefined>(undefined);
     /**
      * Why the last reminder action failed. Success needs no message: the card itself switches
@@ -530,52 +379,6 @@ export class SettingsComponent {
         this.showError(await this.settings.setCardioGoal(minutes));
     }
 
-    protected chooseWeekdays(): void {
-        if (this.schedule()?.kind !== 'weekdays') {
-            // A common three-day split as the starting point; the chips adjust it.
-            void this.save({ kind: 'weekdays', weekdays: [1, 3, 5] });
-        }
-    }
-
-    protected chooseInterval(): void {
-        if (this.schedule()?.kind !== 'interval') {
-            void this.save({ kind: 'interval', everyDays: 2, startDate: this.today() });
-        }
-    }
-
-    protected toggleDay(day: Weekday): void {
-        const schedule = this.schedule();
-        if (schedule?.kind !== 'weekdays') {
-            return;
-        }
-        const weekdays = schedule.weekdays.includes(day)
-            ? schedule.weekdays.filter((other) => other !== day)
-            : [...schedule.weekdays, day];
-        // Removing the last day is refused by the factory; its message explains why.
-        void this.save({ kind: 'weekdays', weekdays });
-    }
-
-    protected setEveryDays(everyDays: number): void {
-        const schedule = this.schedule();
-        if (schedule?.kind === 'interval') {
-            void this.save({ ...schedule, everyDays: Math.min(everyDays, MAX_EVERY_DAYS) });
-        }
-    }
-
-    /** Restarts the cycle so that today (offset 0) or tomorrow (offset 1) is a gym day. */
-    protected startCycle(offset: number): void {
-        const schedule = this.schedule();
-        if (schedule?.kind === 'interval') {
-            void this.save({ ...schedule, startDate: addDays(this.today(), offset) });
-        }
-    }
-
-    protected async setRotation(rotation: number): Promise<void> {
-        // The stepper has no upper limit of its own, so the page holds the value in range.
-        const clamped = Math.min(Math.max(Math.round(rotation), 1), MAX_WORKOUT_ROTATION);
-        this.showError(await this.settings.setWorkoutRotation(clamped));
-    }
-
     protected async setRestAlert(seconds: number): Promise<void> {
         this.showError(await this.settings.setRestAlert(seconds));
     }
@@ -603,24 +406,6 @@ export class SettingsComponent {
         this.showError(await this.settings.setReminderTime(time));
     }
 
-    protected toggleSolo(exerciseId: string): void {
-        this.openSolo.update((open) => (open === exerciseId ? undefined : exerciseId));
-    }
-
-    /** Adds a solo reminder as every day in the morning, and opens it for adjusting. */
-    protected async addSolo(exerciseId: string): Promise<void> {
-        if (exerciseId === '') {
-            return;
-        }
-        const result = await this.settings.setSoloReminder(
-            defaultSoloReminder(exerciseId, this.today()),
-        );
-        this.reminderError.set(result.ok ? undefined : result.error);
-        if (result.ok) {
-            this.openSolo.set(exerciseId);
-        }
-    }
-
     protected async enableReminders(): Promise<void> {
         await this.act(() => this.reminders.enable());
     }
@@ -631,10 +416,6 @@ export class SettingsComponent {
 
     protected tapAbout(): void {
         this.developerMode.tap();
-    }
-
-    private async save(schedule: Schedule): Promise<void> {
-        this.showError(await this.settings.setGymSchedule(schedule));
     }
 
     private showError(result: Result<unknown>): void {

@@ -15,15 +15,14 @@ import { SessionCompareComponent } from '@analytics/presentation/session-compare
 import { CatalogService } from '@catalog/application/catalog.service';
 import { includesLifting } from '@shared/domain/training-focus';
 import { ExerciseId, isCardio } from '@catalog/domain/exercise';
-import { RemindersService } from '@settings/application/reminders.service';
-import { SettingsService } from '@settings/application/settings.service';
-import { SoloReminderEditorComponent } from '@settings/presentation/solo-reminder-editor/solo-reminder-editor.component';
 import { Locale } from '@shared/application/locale.service';
 import { LocalText, Localized } from '@shared/domain/language';
 import { Clock } from '@shared/application/clock.service';
 import { LocalDatePipe, LocalizePipe, translations } from '@shared/presentation/i18n';
 import { RestAlert } from '@training/application/rest-alert.service';
+import { ProgramsService } from '@training/application/programs.service';
 import { TrainingService } from '@training/application/training.service';
+import { exercisesOfProgram } from '@training/domain/program';
 import {
     Load,
     SetDraft,
@@ -51,10 +50,7 @@ const TEXT = {
         logSet: 'Log a set',
         unknown: 'Unknown exercise',
         choose: 'Choose an exercise',
-        soloReminder: 'Solo reminder',
-        remindersOff: 'Notifications are off on this device, so nothing will ring here yet.',
-        openSettings: 'Turn them on in Settings',
-        done: 'Done',
+        soloProgram: 'Solo program: days and reminder',
         records: {
             weight: 'Weight record',
             reps: 'Rep record',
@@ -73,11 +69,7 @@ const TEXT = {
         logSet: 'Записать подход',
         unknown: 'Неизвестное упражнение',
         choose: 'Выбрать упражнение',
-        soloReminder: 'Соло-напоминание',
-        remindersOff:
-            'Уведомления на этом устройстве выключены, так что здесь пока ничего не прозвонит.',
-        openSettings: 'Включить в Настройках',
-        done: 'Готово',
+        soloProgram: 'Соло-программа: дни и напоминание',
         records: {
             weight: 'Рекорд веса',
             reps: 'Рекорд повторов',
@@ -103,7 +95,6 @@ const TEXT = {
         QuickSetFormComponent,
         RouterLink,
         SessionCompareComponent,
-        SoloReminderEditorComponent,
         RestClockComponent,
         WorkoutTimeComponent,
         SetSummaryComponent,
@@ -113,12 +104,11 @@ const TEXT = {
 })
 export class ExerciseLogComponent {
     private readonly training = inject(TrainingService);
+    private readonly programs = inject(ProgramsService);
     private readonly analytics = inject(AnalyticsService);
     private readonly catalogService = inject(CatalogService);
     private readonly catalog = this.catalogService.catalog;
     private readonly language = inject(Locale).language;
-    private readonly settings = inject(SettingsService);
-    private readonly reminders = inject(RemindersService);
     private readonly clock = inject(Clock);
 
     /**
@@ -166,14 +156,17 @@ export class ExerciseLogComponent {
     /** Rest is a lifting matter: a cardio-only focus hides it (see "Training Focus"). */
     protected readonly showsRest = computed(() => includesLifting(this.catalogService.focus()));
     /**
-     * Whether this exercise has a solo reminder (see "Solo Reminder" in docs/glossary.md): the bell
-     * in the title bar is then lit. The bell shows only while solo sets are being logged.
+     * Where the bell leads while solo sets are being logged: the solo program that holds this
+     * exercise or, when there is none, a new one started with it. `rings` lights the bell.
      */
-    protected readonly hasSoloReminder = computed(() =>
-        this.settings.soloReminders().some((other) => other.exerciseId === this.exerciseId()),
-    );
-    /** Reminders are switched on per device; a reminder set here rings only where they are on. */
-    protected readonly remindersOn = computed(() => this.reminders.state() === 'on');
+    protected readonly soloProgram = computed(() => {
+        const program = this.programs
+            .programs()
+            .find((other) => other.solo && exercisesOfProgram(other).includes(this.exerciseId()));
+        return program === undefined
+            ? { id: 'new', query: { solo: 1, exercise: this.exerciseId() }, rings: false }
+            : { id: program.id, query: null, rings: program.reminder.kind !== 'off' };
+    });
 
     protected readonly exercise = computed(() => this.catalog().findExercise(this.exerciseId()));
     /** A cardio exercise gets the cardio zones (`CardioLogComponent`) instead of the set ones. */
