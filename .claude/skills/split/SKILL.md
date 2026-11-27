@@ -55,8 +55,16 @@ commit or branch; ask which.
 - When a step needs a version of a file that the final tree no longer has (a file renamed in
   step 1 and deleted in step 5), recreate that intermediate version, or fold the change into
   the later step and tell me.
-- Commit with a message that says what the step does and why it is a step. Commits are
-  GPG-signed and I enter the passphrase: never pass `--no-gpg-sign`, and stop if signing fails.
+- Write each message for the maintainers who will read the history, not for me or yourself.
+  The subject says what the commit does. The body says **why**: the reason, the domain rule
+  or the trade-off a reader cannot see in the diff. Leave the body out when there is no such
+  reason; a subject alone is fine.
+  - Do not repeat the diff: no lists of the files, renames or functions it touches.
+  - Do not state the obvious or describe the carving: no "nothing uses it yet", "removed in
+    the next commit", "the work is in the commits before", "these share a commit to stay
+    green". Tell me those things in the conversation instead.
+  - Write only reasons you know from the work, the docs or me. Do not make up a motivation.
+- Commits are GPG-signed and I enter the passphrase: never pass `--no-gpg-sign`, and stop if signing fails.
   No co-author or tool attribution lines.
 - **Never commit to `main`, never merge, never push.**
 

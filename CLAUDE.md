@@ -42,7 +42,8 @@ Work is implemented first and committed afterwards, so the history is written to
 3. **Commit in logical, reviewable steps**, in this order where it applies: refactors with no
    change in behaviour (moves and renames alone), removals, additions, the server, docs. Every
    commit passes lint, format and tests on its own. When a shared file forces two steps into one
-   commit to stay green, say so.
+   commit to stay green, tell me (not in the commit message). Messages are for other
+   maintainers: the body says why, never repeats the diff or states the obvious.
 4. **Commit only on a feature branch, and only during this carving**, with me present: commits
    are GPG-signed and I enter the passphrase. Never bypass signing.
 5. **I merge**, locally, with `--no-ff`. Do not merge or push to `main`: every push there is
