@@ -27,7 +27,27 @@ not add anything else to it.
   a change to the server, `cd reminder-server && go test ./...` too.
 - After every change, however small, add a short line written for users to `changelog.md`
   (git-ignored; create it if missing). It feeds the next release.
-- Commit only when asked.
+- Never commit while implementing, and never to `main`. See "Commits and branches".
+
+## Commits and branches
+
+Work is implemented first and committed afterwards, so the history is written to be reviewed.
+
+1. **Implement in the working tree**, one feature or several related ones in a row, until lint,
+   format, tests and the build are clean. Nothing is committed during this.
+2. **When I ask ("split the work"), carve the finished work into commits** with the `split`
+   skill. We first agree what the feature is called and whether it is one feature or several.
+   Each gets a branch `feature/<name>`; several are stacked, each branching from the one before,
+   never in parallel from `main`.
+3. **Commit in logical, reviewable steps**, in this order where it applies: refactors with no
+   change in behaviour (moves and renames alone), removals, additions, the server, docs. Every
+   commit passes lint, format and tests on its own. When a shared file forces two steps into one
+   commit to stay green, say so.
+4. **Commit only on a feature branch, and only during this carving**, with me present: commits
+   are GPG-signed and I enter the passphrase. Never bypass signing.
+5. **I merge**, locally, with `--no-ff`. Do not merge or push to `main`: every push there is
+   deployed.
+6. A release is its own last commit: the release-notes entry and the version, nothing else.
 
 ## Commands
 
