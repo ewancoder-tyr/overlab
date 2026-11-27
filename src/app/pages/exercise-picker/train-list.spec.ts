@@ -1,8 +1,21 @@
 import { ExerciseId } from '@catalog/domain/exercise';
-import { CURL, DEADLIFT, RUNNING, catalog } from '../../../testing/fixtures';
-import { trainList } from './train-list';
+import { CURL, DEADLIFT, PULL_UP, RUNNING, catalog } from '../../../testing/fixtures';
+import { ListedProgram, trainList } from './train-list';
 
 const CYCLING = 'cycling' as ExerciseId;
+
+const program = (exercises: readonly ExerciseId[], chosen = false): ListedProgram => ({
+    id: 'split',
+    solo: false,
+    chosen,
+    exercises,
+});
+const solo = (exercises: readonly ExerciseId[], id = 'morning'): ListedProgram => ({
+    id,
+    solo: true,
+    chosen: false,
+    exercises,
+});
 
 describe('trainList', () => {
     const favorites = new Set([CURL, RUNNING, CYCLING]);
@@ -21,52 +34,50 @@ describe('trainList', () => {
         expect(trainList([], [], favorites, catalog, 'cardio').favorites).not.toContain(CURL);
     });
 
-    it('keeps a planned exercise that the focus hides', () => {
-        const list = trainList([DEADLIFT, RUNNING], [], favorites, catalog, 'cardio');
+    it('keeps a program exercise that the focus hides', () => {
+        const list = trainList([program([DEADLIFT, RUNNING])], [], favorites, catalog, 'cardio');
 
-        expect(list.planned).toEqual([DEADLIFT, RUNNING]);
+        expect(list.programs.get('split')).toEqual([DEADLIFT, RUNNING]);
         expect(list.favorites).toEqual([CYCLING]);
-        expect(trainList([RUNNING], [], favorites, catalog, 'lifting').planned).toEqual([RUNNING]);
     });
 
-    it('keeps an exercise done in the workout in progress that the focus hides', () => {
-        const list = trainList([RUNNING], [RUNNING, CURL], favorites, catalog, 'cardio');
+    it('puts what was started on top of the program the workout belongs to, in the order started', () => {
+        const list = trainList(
+            [program([CURL, DEADLIFT, RUNNING], true)],
+            [DEADLIFT, PULL_UP],
+            favorites,
+            catalog,
+            'both',
+        );
 
-        expect(list.planned).toEqual([RUNNING, CURL]);
+        expect(list.programs.get('split')).toEqual([DEADLIFT, PULL_UP, CURL, RUNNING]);
+        expect(list.thisWorkout).toEqual([]);
+    });
+
+    it('gives a workout that is no program day a list of its own, leaving programs as they are', () => {
+        const list = trainList(
+            [program([CURL, DEADLIFT])],
+            [PULL_UP, CURL],
+            favorites,
+            catalog,
+            'both',
+        );
+
+        expect(list.thisWorkout).toEqual([PULL_UP, CURL]);
+        expect(list.programs.get('split')).toEqual([CURL, DEADLIFT]);
+    });
+
+    it('lists the exercises of the solo programs once each, and never among the favorites', () => {
+        const list = trainList(
+            [solo([CURL, PULL_UP]), solo([PULL_UP], 'evening'), program([CURL])],
+            [],
+            favorites,
+            catalog,
+            'both',
+        );
+
+        expect(list.solo).toEqual([CURL, PULL_UP]);
+        expect(list.programs.get('split')).toEqual([CURL]);
         expect(list.favorites).not.toContain(CURL);
-    });
-
-    it('puts started exercises on top in the order started, then the rest of the plan', () => {
-        const plan = [DEADLIFT, CURL, RUNNING];
-
-        // Started the run first, then curls; the deadlift is still to do.
-        expect(trainList(plan, [RUNNING, CURL], favorites, catalog, 'both').planned).toEqual([
-            RUNNING,
-            CURL,
-            DEADLIFT,
-        ]);
-        // An unplanned favorite started today is listed among the started ones too.
-        expect(trainList([DEADLIFT], [CYCLING], favorites, catalog, 'both').planned).toEqual([
-            CYCLING,
-            DEADLIFT,
-        ]);
-    });
-
-    it('pins standalone habits on top in catalog order, and not again among the favorites', () => {
-        const list = trainList([DEADLIFT], [], favorites, catalog, 'both', [RUNNING, CURL]);
-
-        expect(list.standalone).toEqual([CURL, RUNNING]);
-        expect(list.favorites).toEqual([CYCLING]);
-    });
-
-    it('lists an exercise that is both a habit and planned in both places', () => {
-        const list = trainList([CURL], [], favorites, catalog, 'both', [CURL]);
-
-        expect(list.standalone).toEqual([CURL]);
-        expect(list.planned).toEqual([CURL]);
-    });
-
-    it('keeps a standalone habit that the focus hides', () => {
-        expect(trainList([], [], favorites, catalog, 'cardio', [CURL]).standalone).toEqual([CURL]);
     });
 });

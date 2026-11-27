@@ -1,12 +1,15 @@
 <!--
-  One row, used by both lists below. An `ng-template` is not rendered where it is written; each
-  list stamps it out with `ngTemplateOutlet`, passing the item as the template's `let-item`.
+  One row, used by every list below. An `ng-template` is not rendered where it is written; each
+  list stamps it out with `ngTemplateOutlet`, passing the item as the template's `let-item` and,
+  from a program's list, the program's card as `let-card`: opening an exercise from there makes
+  the workout that program day.
 -->
-<ng-template #row let-item>
+<ng-template #row let-item let-card="card">
   <a
     class="list-link entry__main"
     [routerLink]="['/exercises', item.exercise.id]"
     [queryParams]="item.solo ? { solo: 1 } : null"
+    (click)="card && choose(card)"
   >
     <olab-exercise-figure [exercise]="item.exercise" [thumbnail]="true" [done]="item.sets > 0" />
     <span class="item">
@@ -58,14 +61,14 @@
 }
 
 <!-- Habits outside workouts (push-ups every morning), pinned on top: they are done first. -->
-@if (standalone().length > 0) {
+@if (solo().length > 0) {
   <section class="card" aria-labelledby="solo-heading">
     <div>
       <span class="eyebrow eyebrow--accent">{{ t().outsideWorkouts }}</span>
       <h2 id="solo-heading">{{ t().solo }}</h2>
     </div>
     <ul class="plain-list">
-      @for (item of standalone(); track item.exercise.id) {
+      @for (item of solo(); track item.exercise.id) {
         <li class="entry" [class.entry--done]="item.sets > 0">
           <ng-container [ngTemplateOutlet]="row" [ngTemplateOutletContext]="{ $implicit: item }" />
         </li>
@@ -74,26 +77,101 @@
   </section>
 }
 
-@if (planned().length > 0) {
-  <section class="card" aria-labelledby="plan-heading">
+<!-- A workout done on a whim: it is no program's day, but what was done is still listed. -->
+@if (thisWorkout().length > 0) {
+  <section class="card" aria-labelledby="workout-heading">
     <div>
-      <span class="eyebrow eyebrow--accent">{{ t().thePlan }}</span>
-      <h2 id="plan-heading">{{ inProgress() ? t().thisWorkout : t().nextWorkout }}</h2>
+      <span class="eyebrow eyebrow--accent">{{ t().onAWhim }}</span>
+      <h2 id="workout-heading">{{ t().thisWorkout }}</h2>
     </div>
-    <!-- An ordered list: the order is the point. -->
     <ol class="plain-list">
-      @for (item of planned(); track item.exercise.id) {
+      @for (item of thisWorkout(); track item.exercise.id) {
         <li class="entry" [class.entry--done]="item.sets > 0" [class.entry--current]="item.current">
           <ng-container [ngTemplateOutlet]="row" [ngTemplateOutletContext]="{ $implicit: item }" />
         </li>
       }
     </ol>
+    <a class="button" routerLink="/programs" [queryParams]="{ from: workoutStart() }">
+      {{ t().saveAsProgram }}
+    </a>
+  </section>
+}
+
+@for (card of programs(); track card.program.id) {
+  <section class="card" [attr.aria-label]="card.title">
+    <div class="program">
+      <div class="program__title">
+        <span class="eyebrow" [class.eyebrow--accent]="card.dueToday">{{ card.when }}</span>
+        <h2>{{ card.title }}</h2>
+      </div>
+      <a
+        class="icon-button"
+        [routerLink]="['/programs', card.program.id]"
+        [attr.aria-label]="t().edit(card.title)"
+        [title]="t().edit(card.title)"
+      >
+        <!-- A small pencil icon. -->
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <!-- The days of the program: the lit one is listed below, a tap switches to another. -->
+    @if (card.days.length > 1) {
+      <div class="tabs" role="group" [attr.aria-label]="t().programDays">
+        @for (day of card.days; track day.id) {
+          <button
+            type="button"
+            class="tab"
+            [class.tab--on]="day.id === card.shownDayId"
+            [attr.aria-pressed]="day.id === card.shownDayId"
+            (click)="switchDay(card, day.id)"
+          >
+            {{ day.title }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (card.items.length > 0) {
+      <!-- An ordered list: the order is the point. -->
+      <ol class="plain-list">
+        @for (item of card.items; track item.exercise.id) {
+          <li
+            class="entry"
+            [class.entry--done]="item.sets > 0"
+            [class.entry--current]="item.current"
+          >
+            <ng-container
+              [ngTemplateOutlet]="row"
+              [ngTemplateOutletContext]="{ $implicit: item, card }"
+            />
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="muted">{{ t().emptyDay }}</p>
+    }
+
+    @if (card.offersUpdate) {
+      <button type="button" class="button" (click)="updateDay(card)">
+        {{ t().updateDay(card.shownDayTitle) }}
+      </button>
+    }
   </section>
 }
 
 @if (favorites().length > 0) {
   <section class="card" aria-labelledby="favorites-heading">
-    <h2 id="favorites-heading">{{ planned().length > 0 ? t().otherFavorites : t().favorites }}</h2>
+    <h2 id="favorites-heading">
+      {{ programs().length > 0 ? t().otherFavorites : t().favorites }}
+    </h2>
     <ul class="plain-list">
       @for (item of favorites(); track item.exercise.id) {
         <li class="entry" [class.entry--current]="item.current">
@@ -105,12 +183,15 @@
 }
 
 <section class="card">
-  @if (planned().length === 0 && favorites().length === 0) {
+  @if (!listsSomething()) {
     <h2>{{ t().noExercises }}</h2>
     <p class="muted">{{ cardioOnly() ? t().noCardioDetail : t().noExercisesDetail }}</p>
   } @else {
     <p class="muted">{{ t().lookingElse }}</p>
   }
-  <!-- Leads to another tab, so it replaces the address like the tab bar does (app.component.html). -->
-  <a class="button" routerLink="/catalog" replaceUrl>{{ t().openCatalog }}</a>
+  <div class="links">
+    <!-- Leads to another tab, so it replaces the address like the tab bar does (app.component.html). -->
+    <a class="button" routerLink="/catalog" replaceUrl>{{ t().openCatalog }}</a>
+    <a class="button" routerLink="/programs">{{ t().programs }}</a>
+  </div>
 </section>

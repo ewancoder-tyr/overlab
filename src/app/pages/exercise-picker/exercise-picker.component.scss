@@ -93,3 +93,49 @@ h2,
   font-size: 0.75rem;
   line-height: 1;
 }
+
+/* A program's card head: when and what, with the edit button at the far end. */
+.program {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.program__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The program days: chips that wrap, the listed one filled. */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.tab {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tab--on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
