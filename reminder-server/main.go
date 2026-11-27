@@ -2,11 +2,11 @@
 //
 // The app itself is offline-first and keeps all training data on the device. But a web app
 // cannot wake itself up at 15:00 to show a notification, so this small service does exactly
-// that and nothing more. It stores, per device: a push subscription, the gym schedule, the
-// reminder time, the app's language and a few headline numbers for the next planned workout to
-// tease the user with ("25 kg on bench press"), and the solo reminders: alarms for single
-// exercises done outside workouts, each with its own days and time (see solo.go). It never
-// receives the training log itself, and no name or account.
+// that and nothing more. It stores, per device: a push subscription, the app's language and one
+// reminder per program (see programs.go): the program's name, its days and time, and a few
+// headline numbers for its next day to tease the user with ("25 kg on bench press"). Devices on
+// an earlier version of the app still register a gym schedule and solo reminders (solo.go)
+// instead. It never receives the training log itself, and no name or account.
 //
 //	GET    /api/reminders/key     the public key the browser needs to subscribe
 //	PUT    /api/reminders/device  register a device or update its reminder
@@ -66,8 +66,10 @@ type deviceRequest struct {
 	} `json:"subscription"`
 	Reminder
 	Hype []HypeFact `json:"hype"`
-	// Solo is optional: a device without solo reminders may leave it out.
+	// Solo is optional: only versions of the app before programs send it.
 	Solo []SoloReminder `json:"solo"`
+	// Programs is optional: one reminder per program (see programs.go).
+	Programs []ProgramReminder `json:"programs"`
 	// Language is optional: a device that sends none gets English.
 	Language string `json:"language"`
 }
@@ -78,9 +80,9 @@ type endpointRequest struct {
 
 // readJSON decodes a small JSON body, answering 400 itself when that fails.
 func readJSON(w http.ResponseWriter, r *http.Request, into any) bool {
-	// The largest request is a registration with twenty hype facts and ten solo reminders: a
-	// few kilobytes.
-	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
+	// The largest request is a registration with twenty programs, each with twenty hype facts
+	// in a script that takes two bytes a letter: well under this.
+	r.Body = http.MaxBytesReader(w, r.Body, 256<<10)
 	if err := json.NewDecoder(r.Body).Decode(into); err != nil {
 		http.Error(w, "the request body is not valid JSON", http.StatusBadRequest)
 		return false
@@ -123,6 +125,11 @@ func (s *server) handlePutDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validatePrograms(request.Programs); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	device := Device{
 		Endpoint: subscription.Endpoint,
 		P256dh:   subscription.Keys.P256dh,
@@ -130,6 +137,7 @@ func (s *server) handlePutDevice(w http.ResponseWriter, r *http.Request) {
 		Reminder: request.Reminder,
 		Hype:     request.Hype,
 		Solo:     request.Solo,
+		Programs: request.Programs,
 		// Stored only when this server speaks it, so the file holds no arbitrary strings.
 		Language: supportedLanguage(request.Language),
 	}
@@ -174,8 +182,14 @@ func (s *server) handleTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "this device is not registered", http.StatusNotFound)
 		return
 	}
-	// The test is a real reminder, so the user sees exactly what gym days will bring.
-	err := s.remind(r.Context(), device, "")
+	// The test is a real reminder, so the user sees exactly what a program's day will bring:
+	// that of the device's first program, or the gym day reminder of a device without programs.
+	var err error
+	if len(device.Programs) > 0 {
+		err = s.remindProgram(r.Context(), device, device.Programs[0], "")
+	} else {
+		err = s.remind(r.Context(), device, "")
+	}
 	if errors.Is(err, errGone) {
 		_ = s.store.Delete(device.Endpoint)
 		http.Error(w, "the browser no longer accepts notifications for this device", http.StatusGone)
@@ -221,6 +235,21 @@ func (s *server) remindSolo(ctx context.Context, device Device, solo SoloReminde
 	return s.store.MarkSoloSent(device.Endpoint, solo.ID, date, wording)
 }
 
+// remindProgram sends the reminder of one program: its name as the title, and a roast about
+// one of the exercises of its next day. Without a set to quote yet, a general wording. `date`
+// is the day it counts for, or "" for a test that should not use up the day.
+func (s *server) remindProgram(ctx context.Context, device Device, program ProgramReminder, date string) error {
+	// The title composeReminder picks ("Gym day") is not used: the program's own name says more.
+	_, body, wording, err := composeReminder(program.Hype, device.Language, device.LastWording-1, s.pick)
+	if err != nil {
+		return err
+	}
+	if err := s.push(ctx, device, programMessage(program, body)); err != nil {
+		return err
+	}
+	return s.store.MarkProgramSent(device.Endpoint, program.ID, date, wording)
+}
+
 // sendDue sends every reminder that is due right now. It runs once a minute.
 func (s *server) sendDue(ctx context.Context) {
 	now := s.now()
@@ -232,8 +261,9 @@ func (s *server) sendDue(ctx context.Context) {
 	}
 }
 
-// sendDueTo sends what one device is due: its gym day reminder and each of its solo reminders,
-// every one on its own schedule. It reports false when the push service says the device is gone.
+// sendDueTo sends what one device is due: each of its program reminders and, for a device on
+// an earlier version of the app, its gym day reminder and each of its solo reminders, every
+// one on its own schedule. It reports false when the push service says the device is gone.
 func (s *server) sendDueTo(ctx context.Context, device Device, now time.Time) bool {
 	if date, due := device.Reminder.DueDate(now, device.LastSentDate); due {
 		err := s.remind(ctx, device, date)
@@ -256,6 +286,19 @@ func (s *server) sendDueTo(ctx context.Context, device Device, now time.Time) bo
 			return false
 		case err != nil:
 			log.Printf("solo reminder failed, will retry: %v", err)
+		}
+	}
+	for _, program := range device.Programs {
+		date, due := program.in(device.Reminder.TimeZone).DueDate(now, program.LastSentDate)
+		if !due {
+			continue
+		}
+		err := s.remindProgram(ctx, device, program, date)
+		switch {
+		case errors.Is(err, errGone):
+			return false
+		case err != nil:
+			log.Printf("program reminder failed, will retry: %v", err)
 		}
 	}
 	return true

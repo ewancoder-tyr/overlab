@@ -30,6 +30,9 @@ type Device struct {
 	// Solo holds the alarms for single exercises done outside workouts (see solo.go). Each
 	// carries its own "last sent" date.
 	Solo []SoloReminder `json:"solo,omitempty"`
+	// Programs holds one reminder per program (see programs.go). Each carries its own "last
+	// sent" date.
+	Programs []ProgramReminder `json:"programs,omitempty"`
 	// LastWording is the index of the wording used last, so the next one differs. It is
 	// stored plus one, so that the zero value of a new device means "none yet".
 	LastWording int `json:"lastWording,omitempty"`
@@ -88,8 +91,8 @@ func (s *Store) save() error {
 }
 
 // Upsert adds a device or replaces its reminder. `sentDate`, when not empty, marks that day as
-// already notified; otherwise an existing device keeps its mark. Solo reminders keep their own
-// marks (see carrySoloSent), for which `now` is needed.
+// already notified; otherwise an existing device keeps its mark. Program and solo reminders keep
+// their own marks (see carryProgramSent), for which `now` is needed.
 func (s *Store) Upsert(device Device, sentDate string, now time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -104,6 +107,7 @@ func (s *Store) Upsert(device Device, sentDate string, now time.Time) error {
 		device.LastSentDate = sentDate
 	}
 	device.Solo = carrySoloSent(existing.Solo, device.Solo, device.Reminder.TimeZone, now)
+	device.Programs = carryProgramSent(existing.Programs, device.Programs, device.Reminder.TimeZone, now)
 	s.devices[device.Endpoint] = device
 	return s.save()
 }
@@ -177,6 +181,32 @@ func (s *Store) MarkSoloSent(endpoint, id, date string, wording int) error {
 		}
 	}
 	device.Solo = solo
+	device.LastWording = wording + 1
+	s.devices[endpoint] = device
+	return s.save()
+}
+
+// MarkProgramSent records that the reminder of program `id` of `endpoint` was sent with wording
+// number `wording` and, when `date` is not empty, that it was the one for that day (a test
+// notification passes no date). The wording is remembered per device, not per program, so the
+// same roast never comes twice in a row whatever it was about.
+func (s *Store) MarkProgramSent(endpoint, id, date string, wording int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	device, known := s.devices[endpoint]
+	if !known {
+		return nil
+	}
+	// A copy, because the slice is shared with whatever All() or Get() handed out earlier.
+	programs := make([]ProgramReminder, len(device.Programs))
+	copy(programs, device.Programs)
+	for index := range programs {
+		if programs[index].ID == id && date != "" {
+			programs[index].LastSentDate = date
+		}
+	}
+	device.Programs = programs
 	device.LastWording = wording + 1
 	s.devices[endpoint] = device
 	return s.save()
