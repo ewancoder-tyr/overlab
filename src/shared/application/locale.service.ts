@@ -6,7 +6,7 @@ import { DEFAULT_LANGUAGE, Language, isLanguage } from '@shared/domain/language'
  * moment it changes.
  *
  * The choice itself is a preference (an event, in the settings context), but `shared` cannot
- * know about settings, and every context needs the language. So, like the workout rotation,
+ * know about settings, and every context needs the language. So, like the rest alerts,
  * the shell passes the preference in (`app.config.ts`). Until the user has chosen, the app
  * follows the browser: a phone set to Russian gets Russian.
  */

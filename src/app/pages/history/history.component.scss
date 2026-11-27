@@ -223,6 +223,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Which program day the workout was, and the way to save it as one. */
+.block__program {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* How long it lasted, pushed to the right edge. */
 .block__duration {
   margin-left: auto;

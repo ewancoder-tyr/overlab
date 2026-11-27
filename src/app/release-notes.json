@@ -1,5 +1,33 @@
 [
   {
+    "version": "1.1.0",
+    "date": "2026-11-27",
+    "summary": {
+      "en": "Programs: build your own list of exercises for each day you train, with its days and its own reminder. Gym days and the workout rotation are gone from Settings, so build a program to keep your reminders.",
+      "ru": "Программы: соберите свой список упражнений на каждый тренировочный день, с днями и своим напоминанием. Дни тренировок и чередование убраны из настроек: соберите программу, чтобы напоминания продолжили приходить."
+    },
+    "changes": {
+      "en": [
+        "Programs: build your own list of exercises for each day you train, in your order, with the days it falls on. The Train page shows the day that comes next, and one tap switches to any other day.",
+        "Train on a whim: whatever you log outside a program still counts everywhere, and the number to beat is always the last time you did that exercise, on any day.",
+        "Save any workout as a program, or as a day of one, from the Train page or from History.",
+        "The automatic plan and the \"gym days\" and \"workout rotation\" settings are gone: a program replaces them. Your gym day reminders stop until you build one under Train, Programs.",
+        "Each program has its own reminder: the time set in Settings, a time of its own, or none.",
+        "A program done every few days moves with you: do it a day late and the next days follow.",
+        "Solo exercises are now solo programs, which can hold several exercises under one reminder. Your solo reminders carried over as they were."
+      ],
+      "ru": [
+        "Программы: соберите свой список упражнений на каждый тренировочный день, в своём порядке, и укажите дни. Страница «Зал» показывает следующий по очереди день, а переключиться на любой другой можно одним нажатием.",
+        "Тренируйтесь как захочется: всё, что записано вне программы, по-прежнему везде учитывается, а побить нужно результат прошлого раза в этом упражнении, в какой бы день он ни был.",
+        "Любую тренировку можно сохранить как программу или как день программы, со страницы «Зал» или из «Истории».",
+        "Автоматический план и настройки «Дни тренировок» и «Чередование тренировок» убраны: их заменяет программа. Напоминания о днях тренировок не будут приходить, пока вы не соберёте программу в разделе «Зал», «Программы».",
+        "У каждой программы своё напоминание: в общее время из настроек, в своё время или без напоминания.",
+        "Программа «раз в несколько дней» подстраивается под вас: сделаете её на день позже, и следующие дни сдвинутся следом.",
+        "Соло-упражнения стали соло-программами, в которых может быть несколько упражнений с одним напоминанием. Ваши соло-напоминания перенесены как были."
+      ]
+    }
+  },
+  {
     "version": "1.0.0",
     "date": "2026-11-26",
     "summary": {

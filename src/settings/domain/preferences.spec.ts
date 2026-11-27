@@ -5,7 +5,6 @@ import {
     changeCardioGoal,
     changeColorScheme,
     changeGamification,
-    changeGymSchedule,
     changeLanguage,
     changeLightSetPercent,
     changeStallInvolvementPercent,
@@ -16,7 +15,6 @@ import {
     changeStallThreshold,
     changeTrainingFocus,
     changeVolumeTarget,
-    changeWorkoutRotation,
     currentPreferences,
 } from './preferences';
 
@@ -27,14 +25,13 @@ function valueOf(result: { ok: boolean; value?: PreferenceChanged }): Preference
     return result.value;
 }
 
-const scheduleAt = (time: string, weekdays: (1 | 2 | 3 | 4 | 5 | 6 | 7)[]): PreferenceChanged =>
-    valueOf(changeGymSchedule({ kind: 'weekdays', weekdays }, contextAt(time)));
+const timeAt = (time: string, reminderTime: string): PreferenceChanged =>
+    valueOf(changeReminderTime(reminderTime, contextAt(time)));
 
 describe('preferences', () => {
-    it('start with no gym schedule, a 15:00 reminder, a rotation of three workouts, a rest alert after a minute, a stall warning after three sessions, lifting and cardio, 10 sets and 150 cardio minutes a week, light sets at half, stalls marking muscles involved by more than half, the dark colour scheme, gamification off', () => {
+    it('start with a 15:00 reminder, a rest alert after a minute, a stall warning after three sessions, lifting and cardio, 10 sets and 150 cardio minutes a week, light sets at half, stalls marking muscles involved by more than half, the dark colour scheme, gamification off', () => {
         expect(currentPreferences([])).toEqual({
             reminderTime: '15:00',
-            workoutRotation: 3,
             restAlertSeconds: 60,
             switchRestAlertSeconds: 180,
             stallThreshold: 3,
@@ -236,27 +233,14 @@ describe('preferences', () => {
         );
     });
 
-    it('keep the workout rotation, a whole number of workouts from 1 to 10', () => {
-        const context = contextAt('2026-11-11T10:00:00Z');
-        const rotation = valueOf(changeWorkoutRotation(2, context));
-
-        expect(currentPreferences([rotation]).workoutRotation).toBe(2);
-        expect(changeWorkoutRotation(0, context).ok).toBe(false);
-        expect(changeWorkoutRotation(2.5, context).ok).toBe(false);
-        expect(changeWorkoutRotation(11, context).ok).toBe(false);
-    });
-
     it('take the most recent change of each preference, whatever the stored order', () => {
-        const older = scheduleAt('2026-11-10T10:00:00Z', [1, 3]);
-        const newer = scheduleAt('2026-11-11T10:00:00Z', [2, 4]);
-        const time = valueOf(changeReminderTime('18:30', contextAt('2026-11-09T10:00:00Z')));
+        const older = timeAt('2026-11-10T10:00:00Z', '17:00');
+        const newer = timeAt('2026-11-11T10:00:00Z', '18:30');
 
-        const preferences = currentPreferences([newer, time, older]);
+        const preferences = currentPreferences([newer, older]);
 
         expect(preferences).toEqual({
-            gymSchedule: { kind: 'weekdays', weekdays: [2, 4] },
             reminderTime: '18:30',
-            workoutRotation: 3,
             restAlertSeconds: 60,
             switchRestAlertSeconds: 180,
             stallThreshold: 3,
@@ -271,22 +255,21 @@ describe('preferences', () => {
         });
     });
 
-    it('reject an invalid gym schedule or reminder time, so it never reaches the log', () => {
+    it('reject an invalid reminder time, so it never reaches the log', () => {
         const context = contextAt('2026-11-11T10:00:00Z');
 
-        expect(changeGymSchedule({ kind: 'weekdays', weekdays: [] }, context).ok).toBe(false);
         expect(changeReminderTime('25:00', context).ok).toBe(false);
         expect(changeReminderTime('3pm', context).ok).toBe(false);
     });
 
     it('skip unknown preferences and values that do not validate', () => {
-        const valid = scheduleAt('2026-11-10T10:00:00Z', [1]);
+        const valid = timeAt('2026-11-10T10:00:00Z', '18:30');
         const fromTheFuture = { ...valid, id: 'x1', preference: 'theme', value: 'light' };
         const broken = {
             ...valid,
             id: 'x2',
             occurredAt: '2026-11-12T10:00:00.000Z',
-            value: { kind: 'weekdays', weekdays: [] },
+            value: '25:00',
         };
 
         const preferences = currentPreferences([
@@ -295,6 +278,25 @@ describe('preferences', () => {
             broken as unknown as DomainEvent,
         ]);
 
-        expect(preferences.gymSchedule).toEqual({ kind: 'weekdays', weekdays: [1] });
+        expect(preferences.reminderTime).toBe('18:30');
+    });
+
+    it('skip the gym schedule and the rotation of the time before programs', () => {
+        const valid = timeAt('2026-11-10T10:00:00Z', '18:30');
+        const schedule = {
+            ...valid,
+            id: 'x1',
+            preference: 'gym-schedule',
+            value: { kind: 'weekdays', weekdays: [1, 3, 5] },
+        };
+        const rotation = { ...valid, id: 'x2', preference: 'workout-rotation', value: 3 };
+
+        const preferences = currentPreferences([
+            valid,
+            schedule as unknown as DomainEvent,
+            rotation as unknown as DomainEvent,
+        ]);
+
+        expect(preferences).toEqual({ ...currentPreferences([]), reminderTime: '18:30' });
     });
 });

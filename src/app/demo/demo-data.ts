@@ -3,7 +3,15 @@ import { ExerciseId } from '@catalog/domain/exercise';
 import { favoriteExercise } from '@catalog/domain/favorites';
 import { DEFAULT_TECHNIQUE_ID, TechniqueId } from '@catalog/domain/technique';
 import { DeviceId, DomainEvent, EventContext } from '@shared/domain/event';
+import { toLocalDate } from '@shared/domain/schedule';
 import { performCardio } from '@training/domain/cardio';
+import {
+    Program,
+    ProgramDayId,
+    ProgramId,
+    chooseProgramDay,
+    defineProgram,
+} from '@training/domain/program';
 import { RepGroup, SetPerformed, performSet } from '@training/domain/set';
 
 /**
@@ -12,7 +20,8 @@ import { RepGroup, SetPerformed, performSet } from '@training/domain/set';
  * first (a rotation of 3, so each workout comes round every six days). Loads follow double
  * progression: add reps until the top of the range, then add load and start again at the bottom.
  *
- * Every exercise used is also starred, so the Train page has its favorites.
+ * Every exercise used is also starred, so the Train page has its favorites, and the three
+ * workouts are a program of three days (`demoProgram`), each workout marked as the day it was.
  *
  * So that every screen has something to show, a few lifts stall at the end (see `plateau`), and
  * each workout ends with a cardio bout: running after A and C, cycling after B, whose last rides
@@ -182,6 +191,14 @@ export function generateDemoEvents(catalog: Catalog, now: Date): readonly Domain
 
     const schedule = workoutSchedule(firstDaysAgo, random);
 
+    // The rotation as a program, defined before the first workout: every second day, counted
+    // from the first one.
+    const program = demoProgram(toLocalDate(new Date(today.getTime() - firstDaysAgo * DAY_MS)));
+    const programDefined = defineProgram(program, [], catalog, contextAt(starredAt));
+    if (programDefined.ok) {
+        events.push(programDefined.value);
+    }
+
     // A plateau covers the last sessions of a lift, so each lift's number of sessions must be
     // known before its first set is written.
     const sessionsOf = new Map<string, number>();
@@ -202,13 +219,22 @@ export function generateDemoEvents(catalog: Catalog, now: Date): readonly Domain
         }
     }
 
-    for (const { daysAgo, lifts, finisher } of schedule) {
+    for (const { daysAgo, turn, lifts, finisher } of schedule) {
         const isToday = daysAgo === 0;
         // Past workouts start at 18:00. Today's is laid out to end a few minutes ago.
         const dayStart = today.getTime() - daysAgo * DAY_MS + 18 * 60 * MINUTE_MS;
         const totalSets = lifts.reduce((sum, entry) => sum + entry.sets, 0);
         let time = isToday ? now.getTime() - (totalSets * 3 + 2) * MINUTE_MS : dayStart;
         const badDay = random() < 0.12;
+
+        // Each workout is the program day it was done as, chosen as its first set is logged.
+        const programDay = program.days[turn];
+        if (programDefined.ok && programDay !== undefined) {
+            const chosen = chooseProgramDay(program, programDay.id, contextAt(time));
+            if (chosen.ok) {
+                events.push(chosen.value);
+            }
+        }
 
         for (const entry of lifts) {
             const session = done.get(entry.exercise) ?? 0;
@@ -288,9 +314,36 @@ export function generateDemoEvents(catalog: Catalog, now: Date): readonly Domain
     return events;
 }
 
+/**
+ * The rotation as the program a user would have built for it: one day per workout, its lifts in
+ * order and the cardio bout last. The ids are fixed, so loading the demo twice defines the same
+ * program.
+ */
+function demoProgram(startDate: string): Program {
+    return {
+        id: 'demo-split' as ProgramId,
+        name: 'Full body',
+        solo: false,
+        schedule: { kind: 'interval', everyDays: DAYS_BETWEEN_WORKOUTS, startDate },
+        reminder: { kind: 'default' },
+        days: ROTATION.map((lifts, index) => {
+            const finisher = FINISHERS[index];
+            return {
+                id: `demo-day-${index + 1}` as ProgramDayId,
+                exercises: [
+                    ...lifts.map((entry) => entry.exercise as ExerciseId),
+                    ...(finisher === undefined ? [] : [finisher]),
+                ],
+            };
+        }),
+    };
+}
+
 /** One workout of the demo: when, which lifts, and the cardio bout after them. */
 interface ScheduledWorkout {
     readonly daysAgo: number;
+    /** Which workout of the rotation it is, from 0: also the index of its program day. */
+    readonly turn: number;
     readonly lifts: readonly Lift[];
     /** Absent today: the workout in progress has not got that far. */
     readonly finisher?: ExerciseId;
@@ -302,7 +355,7 @@ interface ScheduledWorkout {
  * even number ends on 0: the last workout is today's, of which only the first half is done.
  *
  * Which workout of the rotation is next advances only when a workout is actually done: a missed
- * gym day delays the rotation, exactly as the plan rule has it.
+ * gym day delays the rotation, exactly as the program rule has it.
  */
 function workoutSchedule(firstDaysAgo: number, random: () => number): readonly ScheduledWorkout[] {
     const schedule: ScheduledWorkout[] = [];
@@ -312,13 +365,14 @@ function workoutSchedule(firstDaysAgo: number, random: () => number): readonly S
         if (!isToday && random() < 0.07) {
             continue;
         }
-        const lifts = ROTATION[turn % ROTATION.length] ?? [];
-        const finisher = FINISHERS[turn % FINISHERS.length];
+        const day = turn % ROTATION.length;
+        const lifts = ROTATION[day] ?? [];
+        const finisher = FINISHERS[day];
         turn++;
         schedule.push(
             isToday
-                ? { daysAgo, lifts: lifts.slice(0, 3) }
-                : { daysAgo, lifts, ...(finisher === undefined ? {} : { finisher }) },
+                ? { daysAgo, turn: day, lifts: lifts.slice(0, 3) }
+                : { daysAgo, turn: day, lifts, ...(finisher === undefined ? {} : { finisher }) },
         );
     }
     return schedule;

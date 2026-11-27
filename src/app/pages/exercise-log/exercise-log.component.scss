@@ -184,40 +184,6 @@ olab-rest-clock.log-rest {
   color: var(--on-accent);
 }
 
-/*
- * The solo reminder editor, as the browser's modal dialog: it sits in the top layer, above the
- * three zones, which do not move under it.
- */
-.reminder-dialog {
-  width: min(100% - 2rem, 26rem);
-  max-height: calc(100% - 2rem);
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  background: var(--surface);
-  color: var(--text);
-
-  /* Only an open dialog is laid out; `display` on a closed one would show it. */
-  &[open] {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-  }
-
-  &::backdrop {
-    background: rgb(0 0 0 / 70%);
-  }
-
-  h2,
-  .muted {
-    margin: 0;
-  }
-
-  a {
-    color: var(--accent-ink);
-  }
-}
-
 .legend {
   display: flex;
   flex-wrap: wrap;

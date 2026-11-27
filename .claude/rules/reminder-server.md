@@ -10,7 +10,7 @@ paths:
 - `cloudsync` and `leaderboard` import nothing from each other or from `main`; `main.go` wires
   them. Each must stay removable by deleting its folder and its lines in `main.go`.
 - The server never interprets events and has no user accounts of its own.
-- `schedule.go` must stay identical in behaviour to `src/settings/domain/gym-schedule.ts`, with
+- `schedule.go` must stay identical in behaviour to `src/shared/domain/schedule.ts`, with
   tests for the same cases on both sides.
 - Wordings live only in Go, the numbers only in TypeScript. Every language has the same number of
   wordings. Russian wordings use no gendered forms (see the comment on `russian` in `wording.go`).

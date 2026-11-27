@@ -17,13 +17,14 @@
 - **Week gauges are buttons:** each opens, one at a time, to the muscle group's volume
   breakdown. A stalled muscle group has an orange dot before its name.
 - **Navigation** is a bottom tab bar (Week, Train, Catalog, Data, Settings). Train lists the
-  standalone habits first (see the standalone set rule in `docs/rules/training.md`), then the
-  exercises started in the workout in progress (in the order started), then the rest of the plan in
-  order, then the other favorites; the Catalog lists everything and is where exercises are starred.
+  solo exercises first (see the standalone set rule in `docs/rules/training.md`), then a workout
+  done on a whim, then each program as a card (due today first: the day that comes next, with
+  the exercises started on top in the order started and chips to switch day), then the other
+  favorites; the Catalog lists everything and is where exercises are starred.
   Tabs switch on finger-down (`SwitchOnTouchDirective`) and the bar has `touch-action: none`: a
   quick thumb tap that drifts was otherwise taken for a swipe and never became a click. **Back
   retraces your steps, at most one level up** (`app/back-navigation.ts`): among pages opened from a
-  tab (logging, statistics, History, What's new) to the page before, but a page visited again cuts
+  tab (logging, statistics, History, programs, What's new) to the page before, but a page visited again cuts
   the trail back to it (log, statistics, log is one step from Train); from the first page to the tab
   it was opened from; from any other tab to Week; from Week out of the app. On phones nothing is
   added to history (`ReplaceOnlyLocationStrategy` turns every push into a replace, see Known

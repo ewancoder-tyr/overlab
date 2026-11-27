@@ -187,26 +187,16 @@ export class AnalyticsService {
     );
 
     /**
-     * Hype lines for the exercises planned for the next workout: what was done on each the last
-     * time and what to go for, worded in the app's language (the reminder is sent in it too).
-     *
-     * The projection returns a new array on every run. The custom `equal` compares the contents
-     * instead, so the signal only "changes" when a line really differs; its consumer sends the
-     * lines to the reminder server and should not do that after every logged set.
+     * Hype lines for the exercises of a program day: what was done on each the last time and
+     * what to go for, worded in the app's language (the reminder is sent in it too). Reads
+     * signals, so a caller inside an effect or a `computed` follows the log.
      */
-    readonly overloadHype = computed(
-        () =>
-            overloadHype(
-                this.training.nextPlan(),
-                this.training.workouts(),
-                this.catalog(),
-                this.language(),
-            ),
-        { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
-    );
+    overloadHypeFor(exerciseIds: readonly ExerciseId[]): readonly OverloadHype[] {
+        return overloadHype(exerciseIds, this.training.workouts(), this.catalog(), this.language());
+    }
 
     /**
-     * The hype line for the solo reminder of one exercise, from its standalone history; absent
+     * The hype line for one exercise of a solo program, from its standalone history; absent
      * until it has been done outside a workout. Reads signals, so a caller inside an effect or
      * a `computed` follows the log.
      */

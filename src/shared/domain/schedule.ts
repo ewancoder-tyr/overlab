@@ -2,7 +2,7 @@ import { Result, fail, ok } from '@shared/domain/result';
 
 /**
  * A calendar date without a time or a time zone, as `YYYY-MM-DD`: "the 12th of November",
- * wherever you are. Gym days are calendar days, so this is the right type for them; a `Date`
+ * wherever you are. The days of a schedule are calendar days, so this is the right type for them; a `Date`
  * (a moment in time) would drag time zones into every comparison.
  */
 export type LocalDate = string;
@@ -11,22 +11,31 @@ export type LocalDate = string;
 export type Weekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /**
- * On which days the user goes to the gym. Either fixed days of the week, or every N days
- * counted from a start date (every second day is Mon, Wed, Fri, Sun, then Tue, Thu, Sat).
+ * On which days something is done: a program's days. Either fixed days of the week, or every
+ * N days counted from a start date (every second day is Mon, Wed, Fri, Sun, then Tue, Thu, Sat).
  *
  * The reminder server applies the same rule (reminder-server/schedule.go). Keep the two in step.
  */
-export type GymSchedule =
+export type Schedule =
     | { readonly kind: 'weekdays'; readonly weekdays: readonly Weekday[] }
     | {
           readonly kind: 'interval';
           /** Length of the cycle in days: 2 is every second day. */
           readonly everyDays: number;
-          /** A gym day that anchors the cycle. */
+          /** A day of the schedule that anchors the cycle. */
           readonly startDate: LocalDate;
       };
 
 export const MAX_EVERY_DAYS = 14;
+
+/** A time of day as `HH:MM` in 24-hour form, e.g. `15:00`. */
+export type TimeOfDay = string;
+
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function isTimeOfDay(value: unknown): value is TimeOfDay {
+    return typeof value === 'string' && TIME_PATTERN.test(value);
+}
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -62,7 +71,7 @@ export function weekdayOf(date: LocalDate): Weekday {
 }
 
 /** Checks a schedule and returns a clean copy (sorted, de-duplicated weekdays). */
-export function validateGymSchedule(schedule: GymSchedule): Result<GymSchedule> {
+export function validateSchedule(schedule: Schedule): Result<Schedule> {
     if (schedule.kind === 'weekdays') {
         const weekdays = [...new Set(schedule.weekdays)].sort((a, b) => a - b);
         if (weekdays.length === 0) {
@@ -102,19 +111,19 @@ export function validateGymSchedule(schedule: GymSchedule): Result<GymSchedule> 
     });
 }
 
-/** The rule itself: is `date` a gym day on this schedule? */
-export function isGymDay(schedule: GymSchedule, date: LocalDate): boolean {
+/** The rule itself: is `date` a day of this schedule? */
+export function isScheduledDay(schedule: Schedule, date: LocalDate): boolean {
     if (schedule.kind === 'weekdays') {
         return schedule.weekdays.includes(weekdayOf(date));
     }
     const days = dayNumber(date) - dayNumber(schedule.startDate);
-    // Before the start date there are no gym days yet.
+    // Before the start date the schedule has no days yet.
     return days >= 0 && days % schedule.everyDays === 0;
 }
 
-/** The next `count` gym days, starting with `from` itself if it is one. */
-export function upcomingGymDays(
-    schedule: GymSchedule,
+/** The next `count` days of the schedule, starting with `from` itself if it is one. */
+export function upcomingDays(
+    schedule: Schedule,
     from: LocalDate,
     count: number,
 ): readonly LocalDate[] {
@@ -122,7 +131,7 @@ export function upcomingGymDays(
     // The search is bounded so that a malformed schedule can never loop forever.
     for (let offset = 0; days.length < count && offset < 366; offset++) {
         const date = addDays(from, offset);
-        if (isGymDay(schedule, date)) {
+        if (isScheduledDay(schedule, date)) {
             days.push(date);
         }
     }

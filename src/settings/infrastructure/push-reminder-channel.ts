@@ -52,7 +52,7 @@ function refusal(status: number): LocalText {
  *
  * Three parties are involved. The browser asks its vendor's push service (Google's, for Chrome)
  * for a subscription: an address that messages can be posted to. We hand that address to our
- * reminder server together with the plan. On a gym day the server posts a message to the
+ * reminder server together with the plan. On a program's day the server posts a message to the
  * address, the push service wakes the phone, and Angular's service worker shows the
  * notification, even with the app closed.
  */
@@ -117,10 +117,8 @@ export class PushReminderChannel extends ReminderChannel {
         return this.send('PUT', 'device', {
             // `toJSON` gives the address and the two keys the server encrypts messages with.
             subscription: subscription.toJSON(),
-            schedule: plan.schedule,
             time: plan.time,
-            hype: plan.hype,
-            solo: plan.solo,
+            programs: plan.programs,
             language: plan.language,
             // The server runs in UTC; it needs the zone to know when it is 15:00 here.
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,

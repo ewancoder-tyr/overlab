@@ -18,6 +18,7 @@ const PAGE_TITLES = {
         experience: 'Experience · OverLab',
         leaderboard: 'Leaderboard · OverLab',
         history: 'History · OverLab',
+        programs: 'Programs · OverLab',
     },
     ru: {
         week: 'OverLab',
@@ -31,6 +32,7 @@ const PAGE_TITLES = {
         experience: 'Опыт · OverLab',
         leaderboard: 'Лидеры · OverLab',
         history: 'История · OverLab',
+        programs: 'Программы · OverLab',
     },
 } satisfies Localized<Record<string, string>>;
 

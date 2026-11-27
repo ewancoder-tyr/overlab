@@ -41,6 +41,20 @@ export const routes: readonly Page[] = [
             ),
     },
     {
+        path: 'programs',
+        title: 'programs',
+        loadComponent: () =>
+            import('./pages/programs/programs.component').then((m) => m.ProgramsComponent),
+    },
+    {
+        path: 'programs/:programId',
+        title: 'programs',
+        loadComponent: () =>
+            import('./pages/programs/program-editor.component').then(
+                (m) => m.ProgramEditorComponent,
+            ),
+    },
+    {
         path: 'catalog',
         title: 'catalog',
         loadComponent: () =>

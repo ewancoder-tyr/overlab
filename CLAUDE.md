@@ -11,8 +11,8 @@ its target range. Logging sets and progression exist to feed and support that vi
 It is an **offline-first PWA** (English and Russian). All data and all domain logic live on the
 device. Signing in with Google is optional and keeps a cloud copy of the log for syncing.
 
-**There is no backend, with one exception:** `reminder-server/` (Go). It sends the gym day and
-solo reminders and announces new versions, and hosts two separate, removable packages: `cloudsync`
+**There is no backend, with one exception:** `reminder-server/` (Go). It sends each program's
+reminders and announces new versions, and hosts two separate, removable packages: `cloudsync`
 (the cloud copy) and `leaderboard` (the board and buddies). It never interprets the event log. Do
 not add anything else to it.
 
@@ -116,12 +116,12 @@ Code comments refer to these by file and heading.
 | --------------------------- | ----------------------------------------------------------------------- |
 | `docs/glossary.md`          | The ubiquitous language: every domain term, one meaning each            |
 | `docs/architecture.md`      | Contexts in detail, the event envelope, every event and the event rules |
-| `docs/rules/training.md`    | Recording, plan and rotation, rest, standalone and easy sets, focus     |
+| `docs/rules/training.md`    | Recording, programs, rest, standalone and easy sets, focus              |
 | `docs/rules/progression.md` | Progression, records, stalls, stalled muscle groups                     |
 | `docs/rules/cardio.md`      | Everything cardio: bouts, treadmill, match, weekly goal, records        |
 | `docs/rules/history.md`     | The History page, deleting entries, logging in the past                 |
 | `docs/rules/experience.md`  | Experience, levels, celebrations                                        |
-| `docs/reminders.md`         | Gym day and solo reminders, hype lines and roasts                       |
+| `docs/reminders.md`         | Program reminders, hype lines and roasts                                |
 | `docs/sync.md`              | Google sign-in, the cloud copy, the sync server                         |
 | `docs/leaderboard.md`       | Leaderboard and buddies                                                 |
 | `docs/languages.md`         | How every text exists in English and Russian                            |

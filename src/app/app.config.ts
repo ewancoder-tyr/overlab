@@ -20,9 +20,8 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { AnalyticsService } from '@analytics/application/analytics.service';
 import { volumeTarget } from '@analytics/domain/weekly-volume';
 import { CatalogService } from '@catalog/application/catalog.service';
-import { ExerciseId } from '@catalog/domain/exercise';
 import { GamificationService } from '@gamification/application/gamification.service';
-import { RemindersService } from '@settings/application/reminders.service';
+import { ProgramReminderFact, RemindersService } from '@settings/application/reminders.service';
 import { SettingsService } from '@settings/application/settings.service';
 import { Clock } from '@shared/application/clock.service';
 import { EventLog } from '@shared/application/event-log.service';
@@ -35,6 +34,7 @@ import { LeaderboardService } from '@leaderboard/application/leaderboard.service
 import { provideLeaderboard } from '@leaderboard/infrastructure/leaderboard.providers';
 import { provideDiagnostics } from '@diagnostics/infrastructure/diagnostics.providers';
 import { loadExtras } from './extras';
+import { ProgramsService } from '@training/application/programs.service';
 import { TrainingService } from '@training/application/training.service';
 import { Buzzer } from '@training/application/buzzer';
 import { RestAlert } from '@training/application/rest-alert.service';
@@ -43,6 +43,7 @@ import { ScreenWakeLock } from '@shared/infrastructure/screen-wake-lock';
 import { routes } from './app.routes';
 import { LocalizedTitleStrategy } from './localized-title.strategy';
 import { generateDemoEvents } from './demo/demo-data';
+import { programTitle } from './pages/programs/program-wording';
 import { holdWakeLockWhile } from './wake-lock';
 
 /**
@@ -64,18 +65,6 @@ async function loadEventLog(): Promise<void> {
     if (RUNS_FROM_FILE && log.status() === 'ready' && log.events().length === 0) {
         await log.merge(generateDemoEvents(catalog(), clock.currentTime()));
     }
-}
-
-/**
- * The workout rotation is a preference (settings), but the plan it produces belongs to
- * training, and those two contexts must not know each other. The shell passes the number across.
- */
-function feedWorkoutRotation(): void {
-    const settings = inject(SettingsService);
-    const training = inject(TrainingService);
-    effect(() => {
-        training.setRotation(settings.preferences().workoutRotation);
-    });
 }
 
 /**
@@ -104,55 +93,45 @@ function feedColorScheme(): void {
 }
 
 /**
- * Reminders tease the user with numbers for the exercises planned next. The settings context
- * must not know about training, so the shell, which knows both, passes the lines across. The
- * effect re-runs whenever the lines change.
+ * Reminders are sent per program, but settings (which owns reminders) knows neither programs
+ * nor the catalog nor the log. The shell, which knows them all, passes across what a reminder
+ * needs: the program's name, its days as they stand after the last time it was done, when it
+ * wants to ring, and the numbers to roast with.
+ *
+ * The numbers are for the day that comes next, so nobody is teased about a deadlift on a day
+ * without one; a solo program is quoted from its exercises' standalone history. The effect
+ * re-runs whenever any of it changes.
  */
-function feedReminderHype(): void {
-    const analytics = inject(AnalyticsService);
-    const reminders = inject(RemindersService);
-    effect(() => {
-        reminders.setHype(analytics.overloadHype());
-    });
-}
-
-/**
- * Solo reminders are kept by settings as bare exercise ids. The name to put on the notification
- * is the catalog's, and the numbers to roast with come from the exercise's standalone history,
- * so the shell passes both across, as it does the hype. An exercise the catalog does not know
- * gets no fact, and its reminder is then not sent.
- */
-function feedSoloReminderFacts(): void {
-    const settings = inject(SettingsService);
+function feedProgramReminders(): void {
+    const programs = inject(ProgramsService);
     const analytics = inject(AnalyticsService);
     const catalog = inject(CatalogService).catalog;
     const language = inject(Locale).language;
     const reminders = inject(RemindersService);
     effect(() => {
-        reminders.setSoloFacts(
-            settings.soloReminders().flatMap((reminder) => {
-                // Settings does not know the catalog's id type; this is where the two meet.
-                const exerciseId = reminder.exerciseId as ExerciseId;
-                const exercise = catalog().findExercise(exerciseId);
-                if (exercise === undefined) {
-                    return [];
-                }
-                const hype = analytics.soloHypeOf(exerciseId);
-                return [
-                    {
-                        exerciseId,
-                        exercise: exercise.name[language()],
-                        ...(hype === undefined ? {} : { hype }),
-                    },
-                ];
+        reminders.setPrograms(
+            programs.statuses().map(({ program, schedule, next }): ProgramReminderFact => {
+                const exercises = next?.exercises ?? [];
+                const hype = program.solo
+                    ? exercises.flatMap((id) => analytics.soloHypeOf(id) ?? [])
+                    : analytics.overloadHypeFor(exercises);
+                const only = program.solo && exercises.length === 1 ? exercises[0] : undefined;
+                return {
+                    id: program.id,
+                    title: programTitle(program, catalog(), language()),
+                    schedule,
+                    reminder: program.reminder,
+                    hype,
+                    ...(only === undefined ? {} : { open: only }),
+                };
             }),
         );
     });
 }
 
 /**
- * The rest alerts are preferences (settings), but rest is a training matter. As with the rotation,
- * the shell passes the numbers across. Injecting `RestAlert` here also creates it at start-up, so
+ * The rest alerts are preferences (settings), but rest is a training matter, and those two
+ * contexts must not know each other. The shell, which knows both, passes the numbers across. Injecting `RestAlert` here also creates it at start-up, so
  * it buzzes whichever page is open.
  */
 function feedRestAlert(): void {
@@ -169,7 +148,7 @@ function feedRestAlert(): void {
 
 /**
  * The stall threshold and the stall involvement are preferences (settings), but stall detection
- * belongs to analytics. As with the rotation, the shell passes the numbers across.
+ * belongs to analytics. As with the rest alerts, the shell passes the numbers across.
  */
 function feedStallThreshold(): void {
     const settings = inject(SettingsService);
@@ -299,9 +278,7 @@ export const appConfig: ApplicationConfig = {
         provideDiagnostics(),
         // Whatever this installation serves beside the app, if anything (see extras.ts).
         provideAppInitializer(loadExtras),
-        provideAppInitializer(feedWorkoutRotation),
-        provideAppInitializer(feedReminderHype),
-        provideAppInitializer(feedSoloReminderFacts),
+        provideAppInitializer(feedProgramReminders),
         provideAppInitializer(feedStallThreshold),
         provideAppInitializer(feedWeeklyTargets),
         provideAppInitializer(feedTrainingFocus),

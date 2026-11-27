@@ -1,4 +1,4 @@
-import { Service, computed, effect, inject, signal } from '@angular/core';
+import { Service, computed, effect, inject } from '@angular/core';
 import { CatalogService } from '@catalog/application/catalog.service';
 import { ExerciseId } from '@catalog/domain/exercise';
 import { Clock } from '@shared/application/clock.service';
@@ -33,7 +33,6 @@ import {
     standaloneInProgressSince,
     standaloneSessions,
 } from '@training/domain/workout';
-import { plannedExercises } from '@training/domain/workout-plan';
 import {
     IDLE_LIMIT_MS,
     currentExercise,
@@ -70,8 +69,8 @@ export class TrainingService {
     readonly sets = computed(() => this.asOfNow(activeSets(this.log.events())));
     readonly cardio = computed(() => this.asOfNow(activeCardio(this.log.events())));
     /**
-     * The sets that belong to workouts: all but the standalone ones. Workouts, rest, the current
-     * exercise and the plan are derived from these, so a standalone set touches none of them.
+     * The sets that belong to workouts: all but the standalone ones. Workouts, rest and the
+     * current exercise are derived from these, so a standalone set touches none of them.
      */
     private readonly workoutSets = computed(() => workoutSets(this.sets()));
     readonly workouts = computed(() => groupIntoWorkouts(this.workoutSets(), this.cardio()));
@@ -79,7 +78,7 @@ export class TrainingService {
 
     /**
      * The exercises done standalone lately (the user's habits outside workouts), each with the
-     * sets of its standalone session in progress. The Train page pins them to its top.
+     * sets of its standalone session in progress: what a solo program's row shows as done.
      */
     readonly standaloneHabits = computed(() => standaloneHabits(this.sets(), this.clock.now()));
 
@@ -100,28 +99,6 @@ export class TrainingService {
             sameInstant(a?.startedAt, b?.startedAt) &&
             sameInstant(a?.endsAt, b?.endsAt),
     });
-
-    // Only a placeholder: the real value arrives from the preferences before the first render.
-    private readonly rotationLength = signal(1);
-    /** How many distinct workouts the user rotates between. See `setRotation`. */
-    readonly rotation = this.rotationLength.asReadonly();
-
-    /**
-     * The exercises to do, in order: the plan of the workout in progress or, between workouts,
-     * of the next one. Empty until the rotation has come round once.
-     */
-    readonly plan = computed(() => {
-        const workouts = this.workouts();
-        // The workout in progress is the one being planned, so it is not part of its own past.
-        const previous = this.currentWorkout() === undefined ? workouts : workouts.slice(0, -1);
-        return plannedExercises(previous, this.rotation());
-    });
-
-    /**
-     * The plan of the workout after the latest logged one, even while that one is in progress.
-     * This is what a reminder is about: it arrives before the NEXT visit to the gym.
-     */
-    readonly nextPlan = computed(() => plannedExercises(this.workouts(), this.rotation()));
 
     constructor() {
         this.refreshAtIdleLimit();
@@ -178,15 +155,6 @@ export class TrainingService {
                 clearTimeout(timer);
             });
         });
-    }
-
-    /**
-     * The rotation is a preference, and preferences belong to the settings context, which
-     * training must not depend on. So the app shell, which knows both, hands the value in
-     * (see `app.config.ts`).
-     */
-    setRotation(rotation: number): void {
-        this.rotationLength.set(rotation);
     }
 
     /** History of one exercise, oldest session first. Reactive when called inside a `computed`. */

@@ -23,26 +23,26 @@
       Workout time. A fixed-size slot, present even before the first set, so the title never
       shifts when a set is logged. Not for cardio, which has no rest between sets.
 
-      While solo sets are being logged the slot holds the bell of the exercise's solo reminder
-      instead: a solo set touches no workout, so its time says nothing here. The bell is lit
-      when a reminder is set. `showModal()` is the browser's own dialog: it traps focus and
-      closes on Escape or back.
+      While solo sets are being logged the slot holds a bell instead: a solo set touches no
+      workout, so its time says nothing here. The bell opens the solo program that holds this
+      exercise (its days and its reminder), or a new one for it, and is lit when that program
+      rings.
     -->
     @if (!cardio()) {
       @if (standalone()) {
         <div class="bar__time bar__time--bell">
-          <button
-            type="button"
+          <a
             class="icon-button"
-            [class.icon-button--lit]="hasSoloReminder()"
-            [attr.aria-label]="t().soloReminder"
-            [attr.aria-pressed]="hasSoloReminder()"
-            (click)="reminderDialog.showModal()"
+            [class.icon-button--lit]="soloProgram().rings"
+            [routerLink]="['/programs', soloProgram().id]"
+            [queryParams]="soloProgram().query"
+            [attr.aria-label]="t().soloProgram"
+            [title]="t().soloProgram"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" />
             </svg>
-          </button>
+          </a>
         </div>
       } @else {
         <olab-workout-time class="bar__time" [inline]="true" />
@@ -61,21 +61,6 @@
       {{ t().inThePast }} {{ now() | localDate: 'EEE d MMM, HH:mm' }}
     </p>
   }
-
-  <dialog #reminderDialog class="reminder-dialog" aria-labelledby="reminder-dialog-title">
-    <span class="eyebrow">{{ t().soloReminder }}</span>
-    <h2 id="reminder-dialog-title">{{ exercise.name | localize }}</h2>
-    <olab-solo-reminder-editor [exerciseId]="exercise.id" />
-    @if (hasSoloReminder() && !remindersOn()) {
-      <p class="muted">
-        {{ t().remindersOff }}
-        <a routerLink="/settings">{{ t().openSettings }}</a>
-      </p>
-    }
-    <button type="button" class="button button--primary" (click)="reminderDialog.close()">
-      {{ t().done }}
-    </button>
-  </dialog>
 
   @if (cardio()) {
     <!-- Cardio is logged as distance, time and calories: other zones, same screen. -->

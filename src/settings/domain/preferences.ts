@@ -7,21 +7,14 @@ import {
     TrainingFocus,
     isTrainingFocus,
 } from '@shared/domain/training-focus';
-import { GymSchedule, validateGymSchedule } from './gym-schedule';
-
-/** A time of day as `HH:MM` in 24-hour form, e.g. `15:00`. */
-export type TimeOfDay = string;
-
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+import { TimeOfDay, isTimeOfDay } from '@shared/domain/schedule';
 
 /**
  * What a `PreferenceChanged` event carries: the name of one preference and its new value.
  * A union keyed by `preference`, so that each name is tied to the type of its value.
  */
 export type PreferenceChange =
-    | { readonly preference: 'gym-schedule'; readonly value: GymSchedule }
     | { readonly preference: 'reminder-time'; readonly value: TimeOfDay }
-    | { readonly preference: 'workout-rotation'; readonly value: number }
     | { readonly preference: 'language'; readonly value: Language }
     | { readonly preference: 'rest-alert'; readonly value: number }
     | { readonly preference: 'switch-rest-alert'; readonly value: number }
@@ -44,14 +37,11 @@ export type PreferenceChanged = DomainEvent<'PreferenceChanged'> & PreferenceCha
 
 /** The current value of every preference. */
 export interface Preferences {
-    /** Absent until the user has chosen their gym days. */
-    readonly gymSchedule?: GymSchedule;
-    readonly reminderTime: TimeOfDay;
     /**
-     * How many distinct workouts the user cycles through. 1 repeats the same workout every
-     * time; 3 means workouts A, B, C, A, B, C. See "Rotation" in docs/glossary.md.
+     * When a program's reminder rings unless the program has a time of its own. See "Reminder"
+     * in docs/glossary.md.
      */
-    readonly workoutRotation: number;
+    readonly reminderTime: TimeOfDay;
     /** Absent until the user has picked one: the app then follows the browser's language. */
     readonly language?: Language;
     /**
@@ -107,10 +97,6 @@ export interface Preferences {
 }
 
 export const DEFAULT_REMINDER_TIME: TimeOfDay = '15:00';
-/** Three workouts in turn is a common way to train (and how the app's author does). */
-export const DEFAULT_WORKOUT_ROTATION = 3;
-export const MAX_WORKOUT_ROTATION = 10;
-
 /** A minute is a common rest between sets of hypertrophy work. */
 export const DEFAULT_REST_ALERT_SECONDS = 60;
 /** The rest alert moves in steps of this many seconds: 0:15, 0:30, ... */
@@ -256,34 +242,11 @@ function isAlertSeconds(value: unknown, max: number): value is number {
     );
 }
 
-export function isWorkoutRotation(value: unknown): value is number {
-    return (
-        typeof value === 'number' &&
-        Number.isInteger(value) &&
-        value >= 1 &&
-        value <= MAX_WORKOUT_ROTATION
-    );
-}
-
-export function isTimeOfDay(value: unknown): value is TimeOfDay {
-    return typeof value === 'string' && TIME_PATTERN.test(value);
-}
-
 /** Off until the user asks for it: the app is a tracker first, the game is an extra. */
 export const DEFAULT_GAMIFICATION = false;
 
 function changed(change: PreferenceChange, context: EventContext): PreferenceChanged {
     return { ...envelope('PreferenceChanged', 1, context), ...change };
-}
-
-export function changeGymSchedule(
-    schedule: GymSchedule,
-    context: EventContext,
-): Result<PreferenceChanged> {
-    const result = validateGymSchedule(schedule);
-    return result.ok
-        ? ok(changed({ preference: 'gym-schedule', value: result.value }, context))
-        : result;
 }
 
 export function changeReminderTime(
@@ -295,18 +258,6 @@ export function changeReminderTime(
         : fail({
               en: 'The reminder time must look like 15:00.',
               ru: 'Время напоминания должно выглядеть как 15:00.',
-          });
-}
-
-export function changeWorkoutRotation(
-    rotation: number,
-    context: EventContext,
-): Result<PreferenceChanged> {
-    return isWorkoutRotation(rotation)
-        ? ok(changed({ preference: 'workout-rotation', value: rotation }, context))
-        : fail({
-              en: `Rotate between 1 and ${MAX_WORKOUT_ROTATION} workouts.`,
-              ru: `Чередовать можно от 1 до ${MAX_WORKOUT_ROTATION} тренировок.`,
           });
 }
 
@@ -449,9 +400,7 @@ export function changeLanguage(
  * values that do not validate (from an import, or a newer app version) are skipped.
  */
 export function currentPreferences(events: readonly DomainEvent[]): Preferences {
-    let gymSchedule: GymSchedule | undefined;
     let reminderTime = DEFAULT_REMINDER_TIME;
-    let workoutRotation = DEFAULT_WORKOUT_ROTATION;
     let language: Language | undefined;
     let restAlertSeconds = DEFAULT_REST_ALERT_SECONDS;
     let switchRestAlertSeconds = DEFAULT_SWITCH_REST_ALERT_SECONDS;
@@ -471,15 +420,10 @@ export function currentPreferences(events: readonly DomainEvent[]): Preferences 
     for (const event of changes.toSorted(byOccurrence)) {
         // The envelope was checked on the way in; the payload is still unknown at this point.
         const { preference, value } = event as Partial<PreferenceChanged>;
-        if (preference === 'gym-schedule' && typeof value === 'object') {
-            const result = validateGymSchedule(value);
-            if (result.ok) {
-                gymSchedule = result.value;
-            }
-        } else if (preference === 'reminder-time' && isTimeOfDay(value)) {
+        // `gym-schedule` and `workout-rotation` were preferences before programs replaced them
+        // (docs/rules/training.md, "Program rule"); their events stay in old logs and are skipped like any unknown one.
+        if (preference === 'reminder-time' && isTimeOfDay(value)) {
             reminderTime = value;
-        } else if (preference === 'workout-rotation' && isWorkoutRotation(value)) {
-            workoutRotation = value;
         } else if (preference === 'language' && isLanguage(value)) {
             language = value;
         } else if (preference === 'rest-alert' && isRestAlert(value)) {
@@ -507,9 +451,7 @@ export function currentPreferences(events: readonly DomainEvent[]): Preferences 
         }
     }
     return {
-        ...(gymSchedule === undefined ? {} : { gymSchedule }),
         reminderTime,
-        workoutRotation,
         ...(language === undefined ? {} : { language }),
         restAlertSeconds,
         switchRestAlertSeconds,

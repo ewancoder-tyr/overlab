@@ -7,7 +7,6 @@ import { TRAINING_FOCUSES } from '@shared/domain/training-focus';
 import { activeCardio } from '@training/domain/cardio';
 import { activeSets } from '@training/domain/set';
 import { exerciseSessions, groupIntoWorkouts } from '@training/domain/workout';
-import { plannedExercises } from '@training/domain/workout-plan';
 import { CURL, cardioAt, catalog, contextAt, reps, setAt } from '../testing/fixtures';
 
 /**
@@ -32,12 +31,11 @@ describe('training focus', () => {
             volume: weeklyVolume(sets, catalog, NOW),
             cardio: weeklyCardio(events, catalog, NOW),
             records: [...recordsOf(exerciseSessions(workouts, CURL), catalog)],
-            plan: plannedExercises(workouts, 1),
         };
     }
 
     it.each(TRAINING_FOCUSES)(
-        'changes nothing that is projected: weekly volume, records and the plan are the same under focus %s',
+        'changes nothing that is projected: weekly volume and records are the same under focus %s',
         (focus) => {
             const result = changeTrainingFocus(focus, contextAt('2026-11-12T09:00:00Z'));
             if (!result.ok) {

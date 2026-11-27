@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-// A Schedule says on which days the user goes to the gym. It mirrors the GymSchedule type of the
-// web app (src/settings/domain/gym-schedule.ts): the two must apply the same rule, because the
-// app shows the upcoming gym days and this service sends the reminders for them.
+// A Schedule says on which days a program is done. It mirrors the Schedule type of the
+// web app (src/shared/domain/schedule.ts): the two must apply the same rule, because the
+// app shows the upcoming days and this service sends the reminders for them.
 type Schedule struct {
 	// Kind is "weekdays" (fixed days of the week) or "interval" (every N days).
 	Kind string `json:"kind"`

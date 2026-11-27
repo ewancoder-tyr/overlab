@@ -1,0 +1,90 @@
+@if (from(); as from) {
+  <!-- Saving a workout: one question, where its exercises go. -->
+  <section class="card" aria-labelledby="save-heading">
+    <h2 id="save-heading">{{ t().saveWorkout }}</h2>
+    <p class="muted">{{ t().saveIntro }}</p>
+    @if (!full()) {
+      <a
+        class="button button--primary"
+        [routerLink]="['/programs', 'new']"
+        [queryParams]="{ from }"
+      >
+        {{ t().asNewProgram }}
+      </a>
+    }
+  </section>
+
+  @for (program of regular(); track program.id) {
+    <section class="card">
+      <h2>{{ program.title }}</h2>
+      <div class="targets">
+        @if (program.canAddDay) {
+          <a
+            class="button"
+            [routerLink]="['/programs', program.id]"
+            [queryParams]="{ from, day: 'new' }"
+          >
+            {{ t().asNewDay }}
+          </a>
+        }
+        @for (day of program.days; track day.id) {
+          <a
+            class="button button--ghost"
+            [routerLink]="['/programs', program.id]"
+            [queryParams]="{ from, day: day.id }"
+          >
+            {{ t().replace(day.title) }}
+          </a>
+        }
+      </div>
+    </section>
+  }
+} @else {
+  <section class="card" aria-labelledby="programs-heading">
+    <h2 id="programs-heading">{{ t().programs }}</h2>
+    <p class="muted">{{ t().intro }}</p>
+    @if (regular().length > 0) {
+      <ul class="plain-list">
+        @for (program of regular(); track program.id) {
+          <li>
+            <a class="list-link row" [routerLink]="['/programs', program.id]">
+              <span class="row__name">{{ program.title }}</span>
+              <span class="row__summary muted">{{ program.size }} · {{ program.summary }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">{{ t().none }}</p>
+    }
+    @if (!full()) {
+      <a class="button button--primary" [routerLink]="['/programs', 'new']">
+        {{ t().newProgram }}
+      </a>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="solo-heading">
+    <h2 id="solo-heading">{{ t().solo }}</h2>
+    <p class="muted">{{ t().soloIntro }}</p>
+    @if (solo().length > 0) {
+      <ul class="plain-list">
+        @for (program of solo(); track program.id) {
+          <li>
+            <a class="list-link row" [routerLink]="['/programs', program.id]">
+              <span class="row__name">{{ program.title }}</span>
+              <span class="row__summary muted">{{ program.size }} · {{ program.summary }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+    @if (full()) {
+      <p class="muted">{{ t().full(max) }}</p>
+    } @else {
+      <a class="button" [routerLink]="['/programs', 'new']" [queryParams]="{ solo: 1 }">
+        {{ t().newSolo }}
+      </a>
+    }
+  </section>
+}

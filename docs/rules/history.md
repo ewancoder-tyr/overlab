@@ -43,3 +43,6 @@ the past is corrected: deleting an entry and logging on an earlier day (see the 
   (`EventContext.recordedAt`). Unlike the test date they are real: sync goes on. The
   leaderboard is not reported to meanwhile, and coming back celebrates nothing. Held in memory
   only; a moment that is not in the past is refused.
+- **A workout says which program day it was**, when one was chosen, and offers "Save as a
+  program": its exercises, in the order done, become a new program, a new day or replace a day
+  (see the program rule in `docs/rules/training.md`).
