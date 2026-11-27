@@ -11,6 +11,7 @@ import { Clock } from '@shared/application/clock.service';
 import { Locale } from '@shared/application/locale.service';
 import { Localized } from '@shared/domain/language';
 import { LocalDatePipe, translations } from '@shared/presentation/i18n';
+import { ProgramsService } from '@training/application/programs.service';
 import { TrainingService } from '@training/application/training.service';
 import { SlideConfirmComponent } from '@shared/presentation/slide-confirm/slide-confirm.component';
 import { CardioId, cardioTotals } from '@training/domain/cardio';
@@ -30,6 +31,7 @@ import {
 } from '@training/domain/day-history';
 import { SetGridComponent } from '@training/presentation/set-grid/set-grid.component';
 import { HistoryPosition } from './history-position.service';
+import { dayTitle, programTitle } from '../programs/program-wording';
 
 const TEXT = {
     en: {
@@ -51,6 +53,7 @@ const TEXT = {
         pick: 'Tap an entry to delete it.',
         slideToDelete: 'Slide to delete',
         logOnThisDay: 'Log on this day',
+        saveAsProgram: 'Save as a program',
         at: 'At',
         start: 'Start logging',
         pastHint:
@@ -81,6 +84,7 @@ const TEXT = {
         pick: 'Нажмите на запись, чтобы удалить её.',
         slideToDelete: 'Сдвиньте, чтобы удалить',
         logOnThisDay: 'Записать в этот день',
+        saveAsProgram: 'Сохранить как программу',
         at: 'Время',
         start: 'Начать запись',
         pastHint:
@@ -150,6 +154,7 @@ interface DayCell {
 })
 export class HistoryComponent {
     private readonly training = inject(TrainingService);
+    private readonly programs = inject(ProgramsService);
     private readonly analytics = inject(AnalyticsService);
     private readonly gamification = inject(GamificationService);
     private readonly settings = inject(SettingsService);
@@ -272,6 +277,8 @@ export class HistoryComponent {
             readonly kind: DayBlock['kind'];
             readonly startedAt: DayBlock['startedAt'];
             readonly duration: string | undefined;
+            /** `Split · Day 2`, for a workout that was a program day. */
+            readonly programDay: string | undefined;
             readonly exercises: readonly ReturnType<HistoryComponent['exerciseView']>[];
         }[];
     } {
@@ -285,9 +292,22 @@ export class HistoryComponent {
                 kind: block.kind,
                 startedAt: block.startedAt,
                 duration: durationOf(block),
+                programDay: block.kind === 'workout' ? this.programDayOf(block) : undefined,
                 exercises: block.exercises.map((exercise) => this.exerciseView(block, exercise)),
             })),
         };
+    }
+
+    /** Which program day a workout was, in words; undefined for one done on a whim. */
+    private programDayOf(block: DayBlock): string | undefined {
+        const mark = this.programs.workoutDays().get(block.startedAt);
+        const program = this.programs.programs().find((other) => other.id === mark?.programId);
+        const index = program?.days.findIndex((day) => day.id === mark?.dayId) ?? -1;
+        if (program === undefined || index < 0) {
+            return undefined;
+        }
+        const language = this.language();
+        return `${programTitle(program, this.catalog(), language)} · ${dayTitle(index, language)}`;
     }
 
     private exerciseView(

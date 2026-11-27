@@ -221,6 +221,24 @@
                 </li>
               }
             </ul>
+            <!--
+              A workout can become a program day after the fact: its exercises, in the order
+              done. Marked workouts say which day they were.
+            -->
+            @if (block.kind === 'workout' && !editing()) {
+              <div class="block__program">
+                @if (block.programDay; as programDay) {
+                  <span class="eyebrow">{{ programDay }}</span>
+                }
+                <a
+                  class="button button--small"
+                  routerLink="/programs"
+                  [queryParams]="{ from: block.startedAt }"
+                >
+                  {{ t().saveAsProgram }}
+                </a>
+              </div>
+            }
           </section>
         } @empty {
           <section class="card">

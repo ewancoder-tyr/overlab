@@ -15,7 +15,7 @@ const TEXT = {
         intro: 'Tools for trying the app out and tracking down problems.',
         demoHeading: 'Demo data',
         demoIntro:
-            'Demo data adds about two months of generated workouts (three in rotation, one every second day, each ending with a run or a ride) and stars their exercises, so you can see the app with history in it, a few stalled exercises included. It mixes with your own sets and cannot be taken out again; erasing removes everything, demo and real. Signed in, it goes to your cloud copy too, and only "Delete everything" on the Data page takes it out.',
+            'Demo data adds about two months of generated workouts (a program of three days, one every second day, each ending with a run or a ride) and stars their exercises, so you can see the app with history in it, a few stalled exercises included. It mixes with your own sets and cannot be taken out again; erasing removes everything, demo and real. Signed in, it goes to your cloud copy too, and only "Delete everything" on the Data page takes it out.',
         demoConfirm: 'Tap again to add demo data',
         demo: 'Load demo data',
         demoAdded: (count: number) => `Added ${count} demo events.`,
@@ -27,7 +27,7 @@ const TEXT = {
         backToReal: 'Back to real time',
         notificationHeading: 'Test notification',
         notificationIntro:
-            'Sends a reminder to this device straight away, worded as the real one on a gym day would be.',
+            'Sends a reminder to this device straight away, worded as the real one on a day of a program would be.',
         sendTest: 'Send a test',
         remindersOff: 'Turn on reminders in Settings first.',
         sent: 'Sent. It should arrive in a few seconds.',
@@ -37,7 +37,7 @@ const TEXT = {
         intro: 'Инструменты, чтобы опробовать приложение и найти проблему.',
         demoHeading: 'Демо-данные',
         demoIntro:
-            'Демо-данные добавляют около двух месяцев сгенерированных тренировок (три по очереди, через день, каждая заканчивается бегом или велосипедом) и отмечают их упражнения звёздочкой, чтобы посмотреть приложение с историей, включая несколько упражнений в застое. Они смешиваются с вашими подходами, и убрать их потом нельзя; стирание удаляет всё — и демо, и настоящее. После входа они попадут и в облачную копию, и убрать их оттуда можно только кнопкой «Удалить всё» на странице «Данные».',
+            'Демо-данные добавляют около двух месяцев сгенерированных тренировок (программа из трёх дней, через день, каждая заканчивается бегом или велосипедом) и отмечают их упражнения звёздочкой, чтобы посмотреть приложение с историей, включая несколько упражнений в застое. Они смешиваются с вашими подходами, и убрать их потом нельзя; стирание удаляет всё — и демо, и настоящее. После входа они попадут и в облачную копию, и убрать их оттуда можно только кнопкой «Удалить всё» на странице «Данные».',
         demoConfirm: 'Нажмите ещё раз, чтобы добавить',
         demo: 'Добавить демо-данные',
         demoAdded: (count: number) => `Добавлено демо-событий: ${count}.`,
