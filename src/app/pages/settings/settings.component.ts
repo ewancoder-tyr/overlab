@@ -7,13 +7,13 @@ import { Exercise, ExerciseId, isCardio } from '@catalog/domain/exercise';
 import { RemindersService } from '@settings/application/reminders.service';
 import { SettingsService } from '@settings/application/settings.service';
 import {
-    GymSchedule,
+    Schedule,
     MAX_EVERY_DAYS,
     Weekday,
     addDays,
     toLocalDate,
-    upcomingGymDays,
-} from '@settings/domain/gym-schedule';
+    upcomingDays,
+} from '@shared/domain/schedule';
 import {
     CARDIO_GOAL_STEP_MINUTES,
     LIGHT_SET_PERCENT_STEP,
@@ -456,7 +456,7 @@ export class SettingsComponent {
      */
     protected readonly upcoming = computed(() => {
         const schedule = this.schedule();
-        return schedule === undefined ? [] : upcomingGymDays(schedule, this.today(), 5);
+        return schedule === undefined ? [] : upcomingDays(schedule, this.today(), 5);
     });
 
     /**
@@ -633,7 +633,7 @@ export class SettingsComponent {
         this.developerMode.tap();
     }
 
-    private async save(schedule: GymSchedule): Promise<void> {
+    private async save(schedule: Schedule): Promise<void> {
         this.showError(await this.settings.setGymSchedule(schedule));
     }
 

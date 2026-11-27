@@ -4,10 +4,9 @@ import { ColorSchemeId } from '@shared/domain/color-scheme';
 import { Language } from '@shared/domain/language';
 import { Result } from '@shared/domain/result';
 import { TrainingFocus } from '@shared/domain/training-focus';
-import { GymSchedule } from '@settings/domain/gym-schedule';
+import { Schedule, TimeOfDay } from '@shared/domain/schedule';
 import {
     PreferenceChanged,
-    TimeOfDay,
     changeColorScheme,
     changeGamification,
     changeGymSchedule,
@@ -50,7 +49,7 @@ export class SettingsService {
      */
     readonly soloReminders = computed(() => currentSoloReminders(this.log.events()));
 
-    setGymSchedule(schedule: GymSchedule): Promise<Result<PreferenceChanged>> {
+    setGymSchedule(schedule: Schedule): Promise<Result<PreferenceChanged>> {
         return this.record(changeGymSchedule(schedule, this.log.context()));
     }
 

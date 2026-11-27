@@ -1,7 +1,12 @@
 import { DomainEvent, EventContext, byOccurrence, envelope } from '@shared/domain/event';
 import { Result, fail, ok } from '@shared/domain/result';
-import { GymSchedule, LocalDate, validateGymSchedule } from './gym-schedule';
-import { TimeOfDay, isTimeOfDay } from './preferences';
+import {
+    LocalDate,
+    Schedule,
+    TimeOfDay,
+    isTimeOfDay,
+    validateSchedule,
+} from '@shared/domain/schedule';
 
 /**
  * A solo reminder: an alarm for one exercise done outside workouts (push-ups every morning),
@@ -20,7 +25,7 @@ export interface SoloReminder {
      * The days it rings on. The same shape and rule as the gym schedule (days of the week, or
      * every N days from a start date), but counted on its own: gym days play no part.
      */
-    readonly schedule: GymSchedule;
+    readonly schedule: Schedule;
     readonly time: TimeOfDay;
 }
 
@@ -76,7 +81,7 @@ export function setSoloReminder(
             ru: 'Соло-напоминанию нужно упражнение.',
         });
     }
-    const schedule = validateGymSchedule(reminder.schedule);
+    const schedule = validateSchedule(reminder.schedule);
     if (!schedule.ok) {
         return schedule;
     }
@@ -135,7 +140,7 @@ export function currentSoloReminders(events: readonly DomainEvent[]): readonly S
         if (typeof schedule !== 'object' || !isTimeOfDay(time)) {
             continue;
         }
-        const valid = validateGymSchedule(schedule);
+        const valid = validateSchedule(schedule);
         if (valid.ok) {
             byExercise.set(exerciseId, { exerciseId, schedule: valid.value, time });
         }

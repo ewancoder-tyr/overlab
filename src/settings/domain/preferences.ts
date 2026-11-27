@@ -7,19 +7,14 @@ import {
     TrainingFocus,
     isTrainingFocus,
 } from '@shared/domain/training-focus';
-import { GymSchedule, validateGymSchedule } from './gym-schedule';
-
-/** A time of day as `HH:MM` in 24-hour form, e.g. `15:00`. */
-export type TimeOfDay = string;
-
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+import { Schedule, TimeOfDay, isTimeOfDay, validateSchedule } from '@shared/domain/schedule';
 
 /**
  * What a `PreferenceChanged` event carries: the name of one preference and its new value.
  * A union keyed by `preference`, so that each name is tied to the type of its value.
  */
 export type PreferenceChange =
-    | { readonly preference: 'gym-schedule'; readonly value: GymSchedule }
+    | { readonly preference: 'gym-schedule'; readonly value: Schedule }
     | { readonly preference: 'reminder-time'; readonly value: TimeOfDay }
     | { readonly preference: 'workout-rotation'; readonly value: number }
     | { readonly preference: 'language'; readonly value: Language }
@@ -45,7 +40,7 @@ export type PreferenceChanged = DomainEvent<'PreferenceChanged'> & PreferenceCha
 /** The current value of every preference. */
 export interface Preferences {
     /** Absent until the user has chosen their gym days. */
-    readonly gymSchedule?: GymSchedule;
+    readonly gymSchedule?: Schedule;
     readonly reminderTime: TimeOfDay;
     /**
      * How many distinct workouts the user cycles through. 1 repeats the same workout every
@@ -265,10 +260,6 @@ export function isWorkoutRotation(value: unknown): value is number {
     );
 }
 
-export function isTimeOfDay(value: unknown): value is TimeOfDay {
-    return typeof value === 'string' && TIME_PATTERN.test(value);
-}
-
 /** Off until the user asks for it: the app is a tracker first, the game is an extra. */
 export const DEFAULT_GAMIFICATION = false;
 
@@ -277,10 +268,10 @@ function changed(change: PreferenceChange, context: EventContext): PreferenceCha
 }
 
 export function changeGymSchedule(
-    schedule: GymSchedule,
+    schedule: Schedule,
     context: EventContext,
 ): Result<PreferenceChanged> {
-    const result = validateGymSchedule(schedule);
+    const result = validateSchedule(schedule);
     return result.ok
         ? ok(changed({ preference: 'gym-schedule', value: result.value }, context))
         : result;
@@ -449,7 +440,7 @@ export function changeLanguage(
  * values that do not validate (from an import, or a newer app version) are skipped.
  */
 export function currentPreferences(events: readonly DomainEvent[]): Preferences {
-    let gymSchedule: GymSchedule | undefined;
+    let gymSchedule: Schedule | undefined;
     let reminderTime = DEFAULT_REMINDER_TIME;
     let workoutRotation = DEFAULT_WORKOUT_ROTATION;
     let language: Language | undefined;
@@ -472,7 +463,7 @@ export function currentPreferences(events: readonly DomainEvent[]): Preferences 
         // The envelope was checked on the way in; the payload is still unknown at this point.
         const { preference, value } = event as Partial<PreferenceChanged>;
         if (preference === 'gym-schedule' && typeof value === 'object') {
-            const result = validateGymSchedule(value);
+            const result = validateSchedule(value);
             if (result.ok) {
                 gymSchedule = result.value;
             }

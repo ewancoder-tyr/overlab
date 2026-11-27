@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CatalogService } from '@catalog/application/catalog.service';
 import { DiagnosticsCardComponent } from '@diagnostics/presentation/diagnostics-card/diagnostics-card.component';
 import { RemindersService } from '@settings/application/reminders.service';
-import { toLocalDate } from '@settings/domain/gym-schedule';
+import { toLocalDate } from '@shared/domain/schedule';
 import { Clock } from '@shared/application/clock.service';
 import { EventLog } from '@shared/application/event-log.service';
 import { LocalText, Localized } from '@shared/domain/language';

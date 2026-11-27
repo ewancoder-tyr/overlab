@@ -1,6 +1,6 @@
 import { DomainEvent } from '@shared/domain/event';
 import { contextAt } from '../../testing/fixtures';
-import { GymSchedule, isGymDay } from './gym-schedule';
+import { Schedule, isScheduledDay } from '@shared/domain/schedule';
 import {
     MAX_SOLO_REMINDERS,
     SoloReminder,
@@ -11,7 +11,7 @@ import {
     setSoloReminder,
 } from './solo-reminder';
 
-const EVERY_DAY: GymSchedule = { kind: 'interval', everyDays: 1, startDate: '2026-11-16' };
+const EVERY_DAY: Schedule = { kind: 'interval', everyDays: 1, startDate: '2026-11-16' };
 
 function setAt(
     time: string,
@@ -25,7 +25,7 @@ function setAt(
     return result.value;
 }
 
-const pushUps = (time = '08:00', schedule: GymSchedule = EVERY_DAY): SoloReminder => ({
+const pushUps = (time = '08:00', schedule: Schedule = EVERY_DAY): SoloReminder => ({
     exerciseId: 'push-up',
     schedule,
     time,
@@ -40,8 +40,8 @@ describe('solo reminders', () => {
         const reminder = defaultSoloReminder('push-up', '2026-11-16');
 
         expect(reminder.time).toBe('08:00');
-        expect(isGymDay(reminder.schedule, '2026-11-16')).toBe(true);
-        expect(isGymDay(reminder.schedule, '2026-11-17')).toBe(true);
+        expect(isScheduledDay(reminder.schedule, '2026-11-16')).toBe(true);
+        expect(isScheduledDay(reminder.schedule, '2026-11-17')).toBe(true);
     });
 
     it('one per exercise: setting it again replaces it', () => {
@@ -54,7 +54,7 @@ describe('solo reminders', () => {
     });
 
     it('every exercise has its own days and time, listed earliest in the day first', () => {
-        const everySecondDay: GymSchedule = {
+        const everySecondDay: Schedule = {
             kind: 'interval',
             everyDays: 2,
             startDate: '2026-11-17',
@@ -92,7 +92,7 @@ describe('solo reminders', () => {
 
     it('refuse a schedule with no days, a time that is not a time and a missing exercise', () => {
         const context = contextAt('2026-11-16T10:00:00Z');
-        const noDays: GymSchedule = { kind: 'weekdays', weekdays: [] };
+        const noDays: Schedule = { kind: 'weekdays', weekdays: [] };
 
         expect(setSoloReminder(pushUps('08:00', noDays), [], context).ok).toBe(false);
         expect(setSoloReminder(pushUps('8 am'), [], context).ok).toBe(false);

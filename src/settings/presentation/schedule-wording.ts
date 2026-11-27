@@ -1,4 +1,4 @@
-import { GymSchedule, Weekday } from '@settings/domain/gym-schedule';
+import { Schedule, Weekday } from '@shared/domain/schedule';
 import { Language, Localized, plural } from '@shared/domain/language';
 
 /** A day of the week as a chip shows it (`Mon`) and as a screen reader says it (`Monday`). */
@@ -35,7 +35,7 @@ const EVERY_DAY: Localized<string> = { en: 'Every day', ru: 'Каждый ден
  * A schedule in a few words, for a list row: `Every day`, `Every 2 days`, `Mon, Wed, Fri`.
  * All seven weekdays and "every 1 day" are the same days, so both read `Every day`.
  */
-export function describeSchedule(language: Language, schedule: GymSchedule): string {
+export function describeSchedule(language: Language, schedule: Schedule): string {
     if (schedule.kind === 'weekdays') {
         return schedule.weekdays.length === 7
             ? EVERY_DAY[language]

@@ -1,8 +1,7 @@
 import { Signal } from '@angular/core';
 import { Language } from '@shared/domain/language';
 import { Result } from '@shared/domain/result';
-import { GymSchedule } from '@settings/domain/gym-schedule';
-import { TimeOfDay } from '@settings/domain/preferences';
+import { Schedule, TimeOfDay } from '@shared/domain/schedule';
 
 /**
  * Whether this device can and does receive reminders.
@@ -33,7 +32,7 @@ export interface HypeFact {
 export interface SoloReminderPlan {
     readonly id: string;
     readonly exercise: string;
-    readonly schedule: GymSchedule;
+    readonly schedule: Schedule;
     readonly time: TimeOfDay;
     readonly hype?: HypeFact;
 }
@@ -44,7 +43,7 @@ export interface SoloReminderPlan {
  */
 export interface ReminderPlan {
     /** Absent until the user has chosen their gym days: then only solo reminders are sent. */
-    readonly schedule?: GymSchedule;
+    readonly schedule?: Schedule;
     readonly time: TimeOfDay;
     readonly hype: readonly HypeFact[];
     readonly solo: readonly SoloReminderPlan[];

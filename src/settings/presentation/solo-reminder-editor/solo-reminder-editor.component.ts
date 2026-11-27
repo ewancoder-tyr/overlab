@@ -1,13 +1,13 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { SettingsService } from '@settings/application/settings.service';
 import {
-    GymSchedule,
+    Schedule,
     MAX_EVERY_DAYS,
     Weekday,
     addDays,
     toLocalDate,
-    upcomingGymDays,
-} from '@settings/domain/gym-schedule';
+    upcomingDays,
+} from '@shared/domain/schedule';
 import { SoloReminder, defaultSoloReminder } from '@settings/domain/solo-reminder';
 import { Clock } from '@shared/application/clock.service';
 import { LocalText, plural } from '@shared/domain/language';
@@ -99,7 +99,7 @@ export class SoloReminderEditorComponent {
     /** The next few days it rings on, as proof that "every 3 days" means what the user thinks. */
     protected readonly upcoming = computed(() => {
         const reminder = this.reminder();
-        return reminder === undefined ? [] : upcomingGymDays(reminder.schedule, this.today(), 5);
+        return reminder === undefined ? [] : upcomingDays(reminder.schedule, this.today(), 5);
     });
 
     /**
@@ -169,7 +169,7 @@ export class SoloReminderEditorComponent {
         }
     }
 
-    private setSchedule(schedule: GymSchedule): void {
+    private setSchedule(schedule: Schedule): void {
         this.change({ schedule });
     }
 
