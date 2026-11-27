@@ -1,7 +1,7 @@
 # Cardio
 
 The app is about lifting; cardio is a guest in it. Cardio exercises are ordinary catalog entries
-with no involvements, so the Week page never sees them, and they take part in workouts, the plan,
+with no involvements, so the Week page never sees them, and they take part in workouts, programs,
 favorites and reminders like any other exercise. What differs is how they are logged and judged.
 
 - **What a cardio exercise records is its cardio kind** (`cardioKindOf`, an optional `cardioKind`
@@ -133,7 +133,7 @@ Some things done at the gym have only a duration. Sauna is the one such exercise
 - **Only time is recorded**: `performCardio` refuses a distance, calories or an incline, and
   the logging screen has the one time field and one number per row.
 - **It is cardio in every other way**: an exercise with no involvements, logged as
-  `CardioPerformed`, part of workouts, the plan, favorites, history and experience (a minute is
+  `CardioPerformed`, part of workouts, programs, favorites, history and experience (a minute is
   a minute), compared on time by rule 4 of the cardio progression rule.
 - **It stays out of the weekly cardio goal**, which is about training.
 

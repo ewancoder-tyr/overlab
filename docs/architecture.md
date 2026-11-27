@@ -17,18 +17,18 @@ user intent -> factory validates and builds an event -> append to the log -> pro
 
 Each context is a top-level folder in `src/` with the same four layers.
 
-| Context        | Path alias        | Responsibility                                                                                                                                                                                                                                     |
-| -------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shared`       | `@shared/*`       | Event envelope, ids, `Result`, event log and its storage                                                                                                                                                                                           |
-| `catalog`      | `@catalog/*`      | Exercises, techniques, muscle groups, setups, favorites                                                                                                                                                                                            |
-| `training`     | `@training/*`     | Performing and voiding sets and cardio, workouts, history                                                                                                                                                                                          |
-| `analytics`    | `@analytics/*`    | Progression (lifting and cardio), records, stalls, weekly volume and cardio. Owns no events.                                                                                                                                                       |
-| `gamification` | `@gamification/*` | Experience and levels, for the character and each exercise, derived from the log. Owns one event: starting from scratch. Off by default                                                                                                            |
-| `settings`     | `@settings/*`     | Preferences (gym schedule, rotation, reminder time, language, rest alerts, stall threshold, stall involvement, training focus, volume target, light set weight, cardio goal, target window, color scheme, gamification), reminders, solo reminders |
-| `sync`         | `@sync/*`         | Google sign-in, pushing and pulling the cloud copy, sync status                                                                                                                                                                                    |
-| `leaderboard`  | `@leaderboard/*`  | Taking part in the leaderboard, reporting experience, showing the board. Online-first, owns no events. Built on gamification and sync                                                                                                              |
-| `diagnostics`  | `@diagnostics/*`  | On-device trace of taps, page switches, slow moments and errors, for tracking down problems. Off by default                                                                                                                                        |
-| `app`          |                   | Shell, routing, pages that compose contexts                                                                                                                                                                                                        |
+| Context        | Path alias        | Responsibility                                                                                                                                                                                             |
+| -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared`       | `@shared/*`       | Event envelope, ids, `Result`, event log and its storage                                                                                                                                                   |
+| `catalog`      | `@catalog/*`      | Exercises, techniques, muscle groups, setups, favorites                                                                                                                                                    |
+| `training`     | `@training/*`     | Performing and voiding sets and cardio, workouts, programs, history                                                                                                                                        |
+| `analytics`    | `@analytics/*`    | Progression (lifting and cardio), records, stalls, weekly volume and cardio. Owns no events.                                                                                                               |
+| `gamification` | `@gamification/*` | Experience and levels, for the character and each exercise, derived from the log. Owns one event: starting from scratch. Off by default                                                                    |
+| `settings`     | `@settings/*`     | Preferences (reminder time, language, rest alerts, stall threshold, stall involvement, training focus, volume target, light set weight, cardio goal, target window, color scheme, gamification), reminders |
+| `sync`         | `@sync/*`         | Google sign-in, pushing and pulling the cloud copy, sync status                                                                                                                                            |
+| `leaderboard`  | `@leaderboard/*`  | Taking part in the leaderboard, reporting experience, showing the board. Online-first, owns no events. Built on gamification and sync                                                                      |
+| `diagnostics`  | `@diagnostics/*`  | On-device trace of taps, page switches, slow moments and errors, for tracking down problems. Off by default                                                                                                |
+| `app`          |                   | Shell, routing, pages that compose contexts                                                                                                                                                                |
 
 `sync` stands beside the chain like `settings`, depending only on `shared`: it moves events without
 reading them. `leaderboard` sits on top of both `gamification` and `sync`, below `app`. So does
@@ -36,9 +36,10 @@ reading them. `leaderboard` sits on top of both `gamification` and `sync`, below
 
 Dependencies point one way: `app -> gamification -> analytics -> training -> catalog -> shared`.
 `settings` stands beside that chain: it depends only on `shared`, and only `app` knows both. Where
-one side needs a value of the other (training needs the rotation and the rest alert, analytics the
+one side needs a value of the other (training needs the rest alert, analytics the
 stall threshold and the weekly targets, gamification the light set weight and the stall threshold,
-catalog the training focus, reminders need the hype, every context needs the language),
+catalog the training focus, reminders need the programs and the hype, every context needs the
+language),
 `app.config.ts` passes it across.
 
 **Extras** are not a context. An installation may serve one script of its own beside the app
@@ -69,22 +70,29 @@ Every event has this envelope:
 | `occurredAt` | When it happened (ISO 8601 UTC). May be in the past when backfilling |
 | `recordedAt` | When it was logged (ISO 8601 UTC)                                    |
 
-| Event                 | Context      | Payload                                                                                                                                                                                                                                                                                   |
-| --------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SetPerformed`        | training     | `kind`, `repGroups[]`, optional `effort`, optional `setupId`, optional `standalone`                                                                                                                                                                                                       |
-| `SetVoided`           | training     | `setId`                                                                                                                                                                                                                                                                                   |
-| `CardioPerformed`     | training     | `exerciseId`, optional `distance` (`value`, `unit`), `durationSeconds`, `calories`, `incline`                                                                                                                                                                                             |
-| `CardioVoided`        | training     | `cardioId`                                                                                                                                                                                                                                                                                |
-| `PreferenceChanged`   | settings     | `preference` (`gym-schedule`, `reminder-time`, `workout-rotation`, `language`, `rest-alert`, `switch-rest-alert`, `stall-threshold`, `training-focus`, `volume-target`, `light-set-weight`, `cardio-goal`, `stall-involvement`, `target-window`, `color-scheme`, `gamification`), `value` |
-| `ProgressReset`       | gamification | none: experience counts only what happened after the latest one                                                                                                                                                                                                                           |
-| `ExerciseFavorited`   | catalog      | `exerciseId`                                                                                                                                                                                                                                                                              |
-| `ExerciseUnfavorited` | catalog      | `exerciseId`                                                                                                                                                                                                                                                                              |
-| `SoloReminderSet`     | settings     | `exerciseId`, `schedule`, `time`                                                                                                                                                                                                                                                          |
-| `SoloReminderRemoved` | settings     | `exerciseId`                                                                                                                                                                                                                                                                              |
+| Event                 | Context      | Payload                                                                                                                                                                                                                                               |
+| --------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SetPerformed`        | training     | `kind`, `repGroups[]`, optional `effort`, optional `setupId`, optional `standalone`                                                                                                                                                                   |
+| `SetVoided`           | training     | `setId`                                                                                                                                                                                                                                               |
+| `CardioPerformed`     | training     | `exerciseId`, optional `distance` (`value`, `unit`), `durationSeconds`, `calories`, `incline`                                                                                                                                                         |
+| `CardioVoided`        | training     | `cardioId`                                                                                                                                                                                                                                            |
+| `PreferenceChanged`   | settings     | `preference` (`reminder-time`, `language`, `rest-alert`, `switch-rest-alert`, `stall-threshold`, `training-focus`, `volume-target`, `light-set-weight`, `cardio-goal`, `stall-involvement`, `target-window`, `color-scheme`, `gamification`), `value` |
+| `ProgressReset`       | gamification | none: experience counts only what happened after the latest one                                                                                                                                                                                       |
+| `ExerciseFavorited`   | catalog      | `exerciseId`                                                                                                                                                                                                                                          |
+| `ExerciseUnfavorited` | catalog      | `exerciseId`                                                                                                                                                                                                                                          |
+| `ProgramDefined`      | training     | `programId`, `name`, `solo`, `schedule`, `reminder` (`default`, `off`, or `at` with a `time`), `days[]` (`id`, `exercises[]`)                                                                                                                         |
+| `ProgramRemoved`      | training     | `programId`                                                                                                                                                                                                                                           |
+| `ProgramDayChosen`    | training     | `programId`, `dayId`: the workout in progress at `occurredAt`, or starting within 3 hours of it, is that program day                                                                                                                                  |
+| `SoloReminderSet`     | (retired)    | `exerciseId`, `schedule`, `time`                                                                                                                                                                                                                      |
+| `SoloReminderRemoved` | (retired)    | `exerciseId`                                                                                                                                                                                                                                          |
 
 The current value of a preference is that of its most recent `PreferenceChanged`. An exercise is
-a favorite when the most recent of its two favorite events is `ExerciseFavorited`, and has a solo
-reminder when the most recent of its two solo reminder events is `SoloReminderSet`.
+a favorite when the most recent of its two favorite events is `ExerciseFavorited`. A program is
+its most recent `ProgramDefined`, unless a `ProgramRemoved` came after it.
+
+**Events no longer written, still read.** `SoloReminderSet` and `SoloReminderRemoved` are read
+as solo programs (see the program rule in `docs/rules/training.md`). `PreferenceChanged` with
+`gym-schedule` or `workout-rotation` is skipped: programs replaced both.
 
 ### Event rules
 

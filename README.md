@@ -15,8 +15,9 @@ device. It runs at https://overlab.typingrealm.org.
 - **Progression, records and stalls.** Every session is compared with the one before, and an
   exercise that has stopped progressing is flagged, along with the muscle group it trains.
 - **Cardio**: distance, time and calories, treadmill segments with incline, a weekly goal.
-- **Workout plans** from a simple rotation, a rest clock, a history you can correct.
-- **Reminders** on gym days, which make fun of your numbers.
+- **Programs**: your own list of exercises for each day you train, a rest clock, a history you
+  can correct.
+- **Reminders** on each program's days, which make fun of your numbers.
 - **Optional extras**: sync between devices through a Google sign-in, experience and levels, a
   leaderboard.
 - English and Russian, dark and light.
